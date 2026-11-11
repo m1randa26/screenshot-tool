@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Escalado por monitor: sin esto, con 125-150 % la captura sale borrosa o desfasada (NF4) -->
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <!-- Publicación: un solo .exe que usa el .NET instalado (NF7, ADR 0003) -->
+  <PropertyGroup>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <!-- Compilación anticipada para que el editor abra rápido la primera vez (NF2) -->
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
+</Project>

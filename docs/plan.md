@@ -11,7 +11,7 @@
 
 ## Etapa 0: Base
 
-- [ ] **T01. Crear la solución**
+- [x] **T01. Crear la solución**
   Proyecto WinForms (`src/CapturaTool`) + proyecto de pruebas xUnit (`tests/CapturaTool.Tests`). Configurar DPI *PerMonitorV2*, *ReadyToRun*, publicación en un solo archivo dependiente del runtime, `.gitignore` y `docs/checklist-manual.md` vacío.
   *Cumple:* NF4 (configuración), NF6, NF7
   *Hecho cuando:* `dotnet build` y `dotnet test` pasan (con una prueba de ejemplo) y la app abre y cierra sin error.
