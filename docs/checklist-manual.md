@@ -178,3 +178,18 @@ Start-Sleep -Seconds 15
 - [x] `Ctrl + C` mientras se escribe un texto: el texto aparece en la imagen pegada.
 - [x] Deshacer una anotación y copiar: la anotación deshecha **no** aparece en la imagen pegada.
 - [x] Una captura sin anotaciones se copia y pega igual que antes.
+
+## T13. Cerrar y descartar
+
+- [x] **Sin anotaciones + `Esc`:** el editor se cierra sin preguntar. (R27)
+- [x] **Sin anotaciones + X de la ventana:** se cierra sin preguntar. (R27)
+- [x] **Con anotaciones + `Esc`:** pregunta "¿Descartar la captura?" con **No** marcado; `Enter` (No) deja todo igual; **Sí** cierra. (R27)
+- [x] **Con anotaciones + X de la ventana:** pregunta igual; **No** deja todo igual; **Sí** cierra. (R27)
+- [x] Deshacer todas las anotaciones con `Ctrl + Z` y presionar `Esc`: cierra sin preguntar.
+- [x] Escribiendo un texto, `Esc` borra solo ese texto y el editor sigue abierto; un segundo `Esc` ya pide cerrar.
+- [x] Escribiendo un texto (sin confirmar) y cerrando con la X: pregunta antes de cerrar.
+- [x] Con anotaciones, `Ctrl + C`: copia y cierra **sin** preguntar.
+- [x] **Atajo con el editor abierto, detrás de otra ventana:** el editor pasa al frente y no aparece la selección. (R10)
+- [x] **Atajo con el editor minimizado:** el editor se restaura (maximizado si lo estaba) y pasa al frente. (R10)
+- [x] El menú **Capturar** con el editor abierto hace lo mismo que el atajo. (R10)
+- [x] Después de cerrar el editor, el atajo vuelve a abrir la selección.

@@ -24,6 +24,9 @@ public class TrayApp : ApplicationContext
     // Capturas de la selección en curso: null cuando no hay ninguna abierta
     private List<MonitorCapture>? _captures;
 
+    // Editor abierto: null cuando no hay ninguno (R10)
+    private EditorForm? _editor;
+
     public Notifier Notifier { get; }
 
     public TrayApp(Logger logger)
@@ -75,6 +78,13 @@ public class TrayApp : ApplicationContext
 
     private void Capture()
     {
+        if (_editor != null)
+        {
+            // R10: con un editor abierto no se captura de nuevo; el editor pasa al frente
+            _editor.ShowAgain();
+            return;
+        }
+
         if (_captures != null)
         {
             return; // ya hay una selección abierta
@@ -152,6 +162,8 @@ public class TrayApp : ApplicationContext
         EndSelection();
 
         var editor = new EditorForm(image, _clipboard, Notifier); // el editor pasa a ser dueño de la imagen
+        _editor = editor;
+        editor.FormClosed += (sender, e) => _editor = null;
         editor.Show();
         editor.Activate();
 

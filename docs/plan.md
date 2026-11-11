@@ -80,7 +80,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
   *Cumple:* R21 (completo)
   *Hecho cuando:* una prueba automática verifica que la imagen final contiene las anotaciones en la posición correcta; al pegar en Slack se ven igual que en el editor.
 
-- [ ] **T13. Cerrar y descartar**
+- [x] **T13. Cerrar y descartar**
   `Esc` / cerrar ventana: pregunta solo si hay anotaciones. El atajo con el editor abierto lo trae al frente.
   *Cumple:* R10, R27
   *Hecho cuando:* los cuatro casos (con y sin anotaciones × Esc o cerrar ventana) se comportan según la spec.

@@ -22,6 +22,9 @@ public sealed class AnnotationDocument : IDisposable
     /// <summary>Anotaciones en el orden en que se crearon.</summary>
     public IReadOnlyList<Annotation> Annotations => _annotations;
 
+    /// <summary>true si hay anotaciones visibles (lo deshecho no cuenta). Ver R27.</summary>
+    public bool HasAnnotations => _annotations.Count > 0;
+
     public bool CanUndo => _annotations.Count > 0;
 
     public bool CanRedo => _redoStack.Count > 0;

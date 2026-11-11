@@ -16,6 +16,12 @@ public class EditorForm : Form
     private readonly ClipboardWriter _clipboard;
     private readonly Notifier _notifier;
 
+    // true después de copiar (o guardar) con éxito: cerrar ya no pierde nada (R27)
+    private bool _outputDone;
+
+    // Para restaurar la ventana como estaba (normal o maximizada) si se minimizó (R10)
+    private FormWindowState _stateBeforeMinimize = FormWindowState.Normal;
+
     // Botones de la barra, para marcar cuál está elegido
     private readonly Dictionary<Tool, ToolStripButton> _toolButtons = new();
     private readonly Dictionary<Color, ToolStripButton> _colorButtons = new();
@@ -181,6 +187,14 @@ public class EditorForm : Form
 
         switch (keyData)
         {
+            case Keys.Escape:
+                if (_canvas.IsTyping)
+                {
+                    break; // Esc es para el lienzo: cancela solo el texto (R14)
+                }
+                Close(); // igual que la X de la ventana: pregunta si hay anotaciones (R27)
+                return true;
+
             case Keys.Control | Keys.C:
                 CopyToClipboard();
                 return true;
@@ -216,6 +230,7 @@ public class EditorForm : Form
         {
             // R21: el aviso aparece solo si la copia se verificó
             _notifier.Info("CapturaTool", "Copiado al portapapeles");
+            _outputDone = true;
             Close();
         }
         else
@@ -227,6 +242,55 @@ public class EditorForm : Form
                 "CapturaTool",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
+        }
+    }
+
+    /// <summary>
+    /// Trae el editor al frente (R10): lo restaura si estaba minimizado y lo activa.
+    /// </summary>
+    public void ShowAgain()
+    {
+        if (WindowState == FormWindowState.Minimized)
+        {
+            WindowState = _stateBeforeMinimize;
+        }
+        Activate();
+    }
+
+    protected override void OnResize(EventArgs e)
+    {
+        base.OnResize(e);
+        if (WindowState != FormWindowState.Minimized)
+        {
+            _stateBeforeMinimize = WindowState;
+        }
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        base.OnFormClosing(e);
+
+        // Solo cuando el usuario cierra (Esc o la X); no al apagar Windows, por ejemplo
+        if (e.CloseReason != CloseReason.UserClosing)
+        {
+            return;
+        }
+
+        if (DiscardRule.MustAsk(_document.HasAnnotations, _canvas.HasUnconfirmedText, _outputDone))
+        {
+            // "No" viene marcado: un Enter sin pensar no hace perder el trabajo
+            DialogResult answer = MessageBox.Show(
+                this,
+                "¿Descartar la captura?\n\nSe perderán las anotaciones.",
+                "CapturaTool",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question,
+                MessageBoxDefaultButton.Button2);
+
+            if (answer != DialogResult.Yes)
+            {
+                e.Cancel = true;
+            }
         }
     }
 

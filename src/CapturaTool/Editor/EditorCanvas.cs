@@ -74,6 +74,9 @@ public class EditorCanvas : Control
     /// <summary>true mientras se está escribiendo un texto (antes de confirmarlo o cancelarlo).</summary>
     public bool IsTyping => _typing != null;
 
+    /// <summary>true si se está escribiendo un texto que no está vacío (cuenta como anotación al cerrar).</summary>
+    public bool HasUnconfirmedText => _typing != null && !_typing.IsEmpty;
+
     /// <summary>Confirma el texto que se está escribiendo (R14). Un texto vacío no crea nada.</summary>
     public void ConfirmText()
     {

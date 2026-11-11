@@ -163,4 +163,19 @@ public class AnnotationDocumentTests : IDisposable
         // Un Bitmap liberado lanza ArgumentException al leer sus medidas
         Assert.Throws<ArgumentException>(() => image.Width);
     }
+
+    [Fact]
+    public void HasAnnotations_FollowsAddUndoRedo()
+    {
+        Assert.False(_document.HasAnnotations);
+
+        _document.Add(new TestAnnotation("a"));
+        Assert.True(_document.HasAnnotations);
+
+        _document.Undo();
+        Assert.False(_document.HasAnnotations); // lo deshecho no cuenta, aunque se pueda rehacer
+
+        _document.Redo();
+        Assert.True(_document.HasAnnotations);
+    }
 }
