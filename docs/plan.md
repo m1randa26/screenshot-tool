@@ -28,7 +28,7 @@
   *Cumple:* R4, R5
   *Hecho cuando:* el atajo funciona desde cualquier programa; con el atajo ocupado aparece el aviso y el menú sigue funcionando.
 
-- [ ] **T04. Captura y selección**
+- [x] **T04. Captura y selección**
   `ScreenCapture` (todos los monitores, congelados) + `SelectionOverlay` (uno por monitor): arrastrar = zona, clic = monitor completo, `Esc` = cancelar. Una selección diminuta cuenta como clic.
   *Cumple:* R6, R7, R8, R9, NF4
   *Hecho cuando:* checklist manual: captura nítida al 100 %, 125 % y 150 %; dos monitores con escalado distinto; un menú desplegable se puede capturar.

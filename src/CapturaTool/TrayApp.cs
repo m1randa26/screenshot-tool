@@ -1,3 +1,5 @@
+using CapturaTool.Capture;
+using CapturaTool.Editor;
 using CapturaTool.Platform;
 
 namespace CapturaTool;
@@ -12,6 +14,10 @@ public class TrayApp : ApplicationContext
     private readonly ContextMenuStrip _menu;
     private readonly GlobalHotkey _hotkey;
     private readonly Logger _logger;
+
+    // Selección en curso: null cuando no hay ninguna abierta
+    private List<MonitorCapture>? _captures;
+    private List<SelectionOverlay>? _overlays;
 
     public Notifier Notifier { get; }
 
@@ -60,8 +66,63 @@ public class TrayApp : ApplicationContext
 
     private void Capture()
     {
-        // Provisional: en T04 esto inicia la captura de verdad
-        Notifier.Info("CapturaTool", "Captura iniciada (prueba).");
+        if (_overlays != null)
+        {
+            return; // ya hay una selección abierta
+        }
+
+        // Primero congelar todos los monitores, después mostrar las ventanas (R6)
+        _captures = ScreenCapture.CaptureAllMonitors();
+        _overlays = new List<SelectionOverlay>();
+
+        foreach (MonitorCapture capture in _captures)
+        {
+            var overlay = new SelectionOverlay(capture);
+            overlay.SelectionCompleted += (sender, area) => OnSelectionCompleted(capture, area);
+            overlay.Cancelled += (sender, e) => EndSelection();
+            _overlays.Add(overlay);
+            overlay.Show();
+        }
+
+        // El foco va al monitor donde está el mouse, para que Esc funcione de inmediato
+        SelectionOverlay underMouse =
+            _overlays.FirstOrDefault(o => o.Bounds.Contains(Cursor.Position)) ?? _overlays[0];
+        underMouse.Activate();
+    }
+
+    private void OnSelectionCompleted(MonitorCapture capture, Rectangle area)
+    {
+        // Copiar la zona antes de liberar las capturas
+        Bitmap image = capture.Crop(area);
+        EndSelection();
+
+        // Provisional: en T05 se abre el editor
+        var preview = new PreviewForm(image);
+        preview.Show();
+        preview.Activate();
+    }
+
+    /// <summary>Cierra todos los overlays y libera las capturas.</summary>
+    private void EndSelection()
+    {
+        if (_overlays == null || _captures == null)
+        {
+            return; // ya se cerró (cerrar un overlay vuelve a llamar aquí)
+        }
+
+        List<SelectionOverlay> overlays = _overlays;
+        List<MonitorCapture> captures = _captures;
+        _overlays = null;
+        _captures = null;
+
+        foreach (SelectionOverlay overlay in overlays)
+        {
+            overlay.Close(); // Close también libera la ventana
+        }
+        foreach (MonitorCapture capture in captures)
+        {
+            capture.Dispose();
+        }
     }
 
     private void Exit()
@@ -75,6 +136,7 @@ public class TrayApp : ApplicationContext
     {
         if (disposing)
         {
+            EndSelection();
             _hotkey.Dispose();
             _trayIcon.Dispose();
             _menu.Dispose();

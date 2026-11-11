@@ -31,3 +31,34 @@ Add-Type -Namespace W -Name U -MemberDefinition '[DllImport("user32.dll")] publi
 [W.U]::RegisterHotKey([IntPtr]::Zero, 1, 3, 0x53)   # True = atajo tomado
 Read-Host "Atajo tomado. Presiona Enter para soltarlo"
 ```
+
+## T04. Captura y selección
+
+En cada caso, la ventana "Vista previa (provisional)" muestra la captura y sus medidas en píxeles.
+
+**Selección (R6–R9)**
+
+- [x] `Ctrl + Alt + S`: la pantalla se congela y se oscurece, con cursor en cruz. (R6)
+- [x] El overlay cubre también la barra de tareas.
+- [x] Arrastrar hacia abajo-derecha, arriba-izquierda, arriba-derecha y abajo-izquierda: la zona se ve sin oscurecer y la vista previa muestra exactamente esa zona. (R7)
+- [x] Un clic sin arrastrar captura el monitor completo donde se hizo clic; la vista previa muestra la resolución nativa del monitor (por ejemplo 1920 × 1080). (R8)
+- [x] Una selección diminuta (un "temblor" del mouse de 1–3 px) cuenta como clic. (R8)
+- [x] `Esc` cancela: se cierran los overlays y no se abre nada. (R9)
+- [x] Presionar `Ctrl + Alt + S` con la selección abierta no abre otra.
+- [x] Capturar desde el menú **Capturar**: el menú no aparece en la captura.
+
+**Congelar (R6)**
+
+- [x] Abrir un menú desplegable (por ejemplo, clic derecho en el escritorio), presionar `Ctrl + Alt + S`: el menú aparece en la captura.
+- [x] Dejar visible un tooltip (pasar el mouse sobre un botón) y presionar `Ctrl + Alt + S`: el tooltip aparece en la captura.
+
+**Escalado (NF4)** — cambiar en Configuración de Windows → Pantalla → Escala
+
+- [x] Al **100 %**: captura nítida, medidas iguales a la resolución del monitor.
+- [x] Al **125 %**: captura nítida (texto sin borrosidad), medidas iguales a la resolución del monitor, sin desfase entre lo seleccionado y lo capturado.
+- [x] Al **150 %**: igual que el caso anterior.
+- [x] **Dos monitores con escalado distinto** (si se tienen): cada overlay cubre exactamente su monitor; seleccionar en cada uno captura lo correcto y nítido.
+
+**Memoria**
+
+- [x] Después de cerrar la vista previa, la memoria del proceso (Administrador de tareas) vuelve aproximadamente al nivel anterior a la captura.
