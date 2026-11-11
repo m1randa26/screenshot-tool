@@ -153,3 +153,18 @@ Start-Sleep -Seconds 15
 - [x] Un trazo largo, de lado a lado de la pantalla, se dibuja fluido.
 - [x] Respeta el color elegido; `Ctrl + Z` y `Ctrl + Y` funcionan con resaltados. (R13, R18, R19)
 - [x] Un clic sin arrastrar no crea nada.
+
+## T11. Texto
+
+- [x] La barra muestra **Texto** después de **Resaltador**; con esa herramienta el cursor del mouse es una "I". (R12)
+- [x] Clic dentro de la captura: aparece un cursor del color elegido; al escribir **"bug"** se ve el texto ahí mismo. (R14)
+- [x] `Enter` confirma el texto. (R14)
+- [x] Escribir otro texto y hacer **clic fuera** (en otra parte de la captura): se confirma, y ese clic no empieza otro texto. (R14)
+- [x] Escribir y presionar `Esc`: se borra **solo ese texto**; la captura y las demás anotaciones siguen ahí. (R14)
+- [x] `Retroceso` borra la última letra.
+- [x] Acentos y ñ funcionan: escribir "Aquí falla, ñandú".
+- [x] Cambiar de herramienta mientras se escribe confirma el texto; cambiar de color mientras se escribe cambia el color del texto.
+- [x] Clic con la herramienta Texto y `Enter` sin escribir nada: no se crea ninguna anotación (`Ctrl + Z` no deshace nada invisible).
+- [x] El texto es de una sola línea, en negrita, y se lee bien sobre la captura; en una captura de pantalla completa (reducida) se ve proporcional y en el lugar del clic. (R14)
+- [x] `Ctrl + Z` y `Ctrl + Y` funcionan con textos ya confirmados; **mientras se escribe** no deshacen nada. (R18, R19)
+- [x] `Ctrl + C` mientras se escribe: el texto se confirma primero (no se pierde) y luego se copia. *(La imagen copiada lleva anotaciones a partir de T12.)*

@@ -53,6 +53,7 @@ public class EditorForm : Form
         AddToolButton(strip, Tool.Ellipse, "Círculo");
         AddToolButton(strip, Tool.Arrow, "Flecha");
         AddToolButton(strip, Tool.Highlighter, "Resaltador");
+        AddToolButton(strip, Tool.Text, "Texto");
         strip.Items.Add(new ToolStripSeparator());
 
         // Paleta (R13)
@@ -97,6 +98,7 @@ public class EditorForm : Form
 
     private void SelectTool(Tool tool)
     {
+        _canvas.ConfirmText(); // cambiar de herramienta confirma el texto en curso (R14)
         _canvas.CurrentTool = tool;
         UpdateToolStrip();
     }
@@ -162,6 +164,21 @@ public class EditorForm : Form
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
+        if (_canvas.IsTyping)
+        {
+            switch (keyData)
+            {
+                case Keys.Control | Keys.C:
+                    _canvas.ConfirmText(); // no se pierde lo escrito
+                    CopyToClipboard();
+                    return true;
+
+                case Keys.Control | Keys.Z:
+                case Keys.Control | Keys.Y:
+                    return true; // mientras se escribe no deshacen otras anotaciones; para letras, Retroceso
+            }
+        }
+
         switch (keyData)
         {
             case Keys.Control | Keys.C:

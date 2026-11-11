@@ -26,12 +26,20 @@ public class EditorCanvas : Control
     private PointF _current;
     private readonly List<PointF> _stroke = new(); // puntos del resaltador en curso
 
+    // Texto que se está escribiendo (R14): null cuando no se está escribiendo
+    private TextInput? _typing;
+    private PointF _textPosition; // coordenadas de imagen
+
+    private Tool _currentTool = Tool.Rectangle;
+    private Color _currentColor = Palette.Default;
+
     public EditorCanvas(AnnotationDocument document)
     {
         _document = document;
         View = new ViewTransform(document.BaseImage.Size, ClientSize);
 
         DoubleBuffered = true;
+        SetStyle(ControlStyles.Selectable, true); // puede recibir el teclado (para escribir texto)
         BackColor = Color.FromArgb(45, 45, 48); // gris oscuro: marca dónde termina la captura
         Cursor = Cursors.Cross;
     }
@@ -42,10 +50,53 @@ public class EditorCanvas : Control
     // DesignerSerializationVisibility.Hidden: WinForms lo exige en propiedades públicas de un
     // control; indica que el diseñador visual no debe guardarlas (aquí no se usa el diseñador).
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public Tool CurrentTool { get; set; } = Tool.Rectangle;
+    public Tool CurrentTool
+    {
+        get => _currentTool;
+        set
+        {
+            _currentTool = value;
+            Cursor = value == Tool.Text ? Cursors.IBeam : Cursors.Cross;
+        }
+    }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public Color CurrentColor { get; set; } = Palette.Default;
+    public Color CurrentColor
+    {
+        get => _currentColor;
+        set
+        {
+            _currentColor = value;
+            Invalidate(); // si se está escribiendo, el texto cambia de color al instante
+        }
+    }
+
+    /// <summary>true mientras se está escribiendo un texto (antes de confirmarlo o cancelarlo).</summary>
+    public bool IsTyping => _typing != null;
+
+    /// <summary>Confirma el texto que se está escribiendo (R14). Un texto vacío no crea nada.</summary>
+    public void ConfirmText()
+    {
+        if (_typing == null)
+        {
+            return;
+        }
+
+        if (!_typing.IsEmpty)
+        {
+            _document.Add(new TextAnnotation(_textPosition, _typing.Text, CurrentColor));
+            RebuildCache();
+        }
+        _typing = null;
+        Invalidate();
+    }
+
+    /// <summary>Descarta solo el texto que se está escribiendo (Esc), no la captura.</summary>
+    public void CancelText()
+    {
+        _typing = null;
+        Invalidate();
+    }
 
     /// <summary>Avisar al lienzo de que el documento cambió por fuera (deshacer, rehacer).</summary>
     public void DocumentChanged()
@@ -141,14 +192,52 @@ public class EditorCanvas : Control
             g.Transform = toScreen;
             inProgress.Draw(g);
         }
+
+        if (_typing != null)
+        {
+            DrawTypingText(g);
+        }
+    }
+
+    /// <summary>El texto que se está escribiendo, tal como quedará, con un cursor al final.</summary>
+    private void DrawTypingText(Graphics g)
+    {
+        using Matrix toScreen = View.CreateImageToScreenMatrix();
+        g.Transform = toScreen;
+
+        var text = new TextAnnotation(_textPosition, _typing!.Text, CurrentColor);
+        text.Draw(g);
+
+        SizeF size = text.Measure(g);
+        float x = _textPosition.X + size.Width + 2;
+        using var caret = new Pen(CurrentColor, 2);
+        g.DrawLine(caret, x, _textPosition.Y, x, _textPosition.Y + size.Height);
     }
 
     protected override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
+
+        // Un clic en cualquier lugar mientras se escribe confirma el texto (R14)
+        if (_typing != null)
+        {
+            ConfirmText();
+            return;
+        }
+
         // Solo se empieza a dibujar dentro de la captura
         if (e.Button != MouseButtons.Left || !View.ImageBounds.Contains(e.Location))
         {
+            return;
+        }
+
+        if (CurrentTool == Tool.Text)
+        {
+            // Empezar a escribir donde se hizo clic
+            _typing = new TextInput();
+            _textPosition = View.ClampToImage(View.ScreenToImage(e.Location));
+            Focus();
+            Invalidate();
             return;
         }
 
@@ -203,6 +292,61 @@ public class EditorCanvas : Control
             _drawing = false;
             Invalidate();
         }
+    }
+
+    // Mientras se escribe, Enter, Esc y Retroceso son para el texto (no para la ventana)
+    protected override bool IsInputKey(Keys keyData)
+    {
+        if (_typing != null && (keyData == Keys.Enter || keyData == Keys.Escape || keyData == Keys.Back))
+        {
+            return true;
+        }
+        return base.IsInputKey(keyData);
+    }
+
+    protected override bool IsInputChar(char charCode)
+    {
+        return _typing != null || base.IsInputChar(charCode);
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (_typing == null)
+        {
+            return;
+        }
+
+        switch (e.KeyCode)
+        {
+            case Keys.Enter:
+                ConfirmText();
+                e.SuppressKeyPress = true;
+                break;
+            case Keys.Escape:
+                CancelText();
+                e.SuppressKeyPress = true;
+                break;
+            case Keys.Back:
+                _typing.Backspace();
+                Invalidate();
+                e.SuppressKeyPress = true;
+                break;
+        }
+    }
+
+    protected override void OnKeyPress(KeyPressEventArgs e)
+    {
+        base.OnKeyPress(e);
+        if (_typing == null)
+        {
+            return;
+        }
+
+        // Las letras (con acentos ya compuestos por Windows) se agregan al texto
+        _typing.Type(e.KeyChar);
+        Invalidate();
+        e.Handled = true;
     }
 
     /// <summary>Agrega un punto al trazo del resaltador, si el mouse se movió.</summary>
