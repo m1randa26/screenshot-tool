@@ -130,3 +130,14 @@ Start-Sleep -Seconds 15
 - [x] Deshacer, dibujar una figura nueva y presionar `Ctrl + Y`: no vuelve lo deshecho. (R19)
 - [x] Una captura pequeña se sigue viendo a tamaño real, con la barra arriba.
 - [x] Con el monitor al **150 %**, la barra y los cuadritos de color se ven legibles y del tamaño adecuado.
+
+## T09. Flecha
+
+- [x] La barra muestra **Flecha** después de **Círculo**. (R12)
+- [x] Arrastrar con **Flecha** dibuja una línea con punta triangular; la punta queda **donde se soltó el mouse**. (R16)
+- [x] Funciona en las cuatro direcciones (derecha, izquierda, arriba, abajo) y en diagonal. (R16)
+- [x] En una captura de pantalla completa (que se ve reducida), la punta coincide con el cursor al soltar.
+- [x] La línea tiene el mismo grosor siempre y no asoma por delante de la punta; no se ve una rendija entre línea y punta. (R16)
+- [x] Una flecha corta tiene la punta proporcionada (más pequeña), no un triángulo enorme.
+- [x] Respeta el color elegido; `Ctrl + Z` y `Ctrl + Y` funcionan con flechas. (R13, R18, R19)
+- [x] Un clic sin arrastrar no crea nada.

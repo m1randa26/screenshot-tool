@@ -61,7 +61,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
   *Cumple:* R12 (parcial), R13, R15, R18, R19
   *Hecho cuando:* se dibuja sin trabas sobre una captura 4K; deshacer y rehacer funcionan en pantalla.
 
-- [ ] **T09. Flecha**
+- [x] **T09. Flecha**
   *Cumple:* R12 (parcial), R16
   *Hecho cuando:* la flecha apunta donde soltaste el mouse, también con zoom.
 

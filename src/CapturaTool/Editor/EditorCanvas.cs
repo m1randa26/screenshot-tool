@@ -212,6 +212,8 @@ public class EditorCanvas : Control
         return CurrentTool switch
         {
             Tool.Ellipse => new EllipseAnnotation(bounds, CurrentColor),
+            // La flecha usa los puntos tal cual: la dirección importa (la punta va donde se soltó)
+            Tool.Arrow => new ArrowAnnotation(_start, _current, CurrentColor),
             _ => new RectangleAnnotation(bounds, CurrentColor),
         };
     }
