@@ -1,6 +1,6 @@
 # Spec: Herramienta de capturas para Windows
 
-**Versión:** 1.0 · **Fecha:** 2026-11-10 · **Estado:** ✅ Aprobada · **Fase:** 1 (Especificación)
+**Versión:** 1.1 · **Fecha:** 2026-11-10 · **Estado:** ✅ Aprobada · **Fase:** 1 (Especificación)
 **Basado en:** [`brief.md`](brief.md)
 
 > Esta spec describe **qué hace** el programa, no **con qué se construye**. La tecnología se decide en la Fase 2 (arquitectura).
@@ -96,7 +96,7 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 
 | ID | Requisito |
 |---|---|
-| **R21** | `Ctrl + C` copia la imagen **con sus anotaciones** al portapapeles, cierra el editor y muestra una notificación breve ("Copiado al portapapeles"). La notificación aparece **solo si la copia realmente funcionó**. |
+| **R21** | `Ctrl + C` copia la imagen **con sus anotaciones** al portapapeles, cierra el editor y muestra una notificación breve ("Copiado al portapapeles"). La notificación aparece **solo si la copia realmente funcionó**: después de copiar se verifica que la imagen esté en el portapapeles. |
 | **R22** | Si copiar falla, el programa **reintenta automáticamente** unas veces. Si sigue fallando: **no cierra el editor**, muestra un mensaje claro y deja intentar de nuevo o guardar con `Ctrl + S`. *(Criterio 1: nunca fallar en silencio ni perder la captura.)* |
 | **R23** | `Ctrl + S` guarda la imagen con anotaciones como **PNG** en la carpeta de guardado, **sin copiarla**, y cierra el editor. |
 | **R24** | Nombre automático: `captura_AAAA-MM-DD_HH-MM-SS.png`. Si ya existe, se agrega un sufijo (`_2`, `_3`…). |
@@ -112,6 +112,12 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 | **R29** | Carpeta inicial: `Imágenes\Capturas` del usuario. **[P]** |
 | **R30** | Desde **Configuración** se puede desactivar el arranque automático con Windows. **[P]** |
 | **R31** | La configuración se conserva entre reinicios. |
+
+### 4.6 Errores
+
+| ID | Requisito |
+|---|---|
+| **R32** | Si ocurre un error inesperado, el programa **no se cierra en silencio**: lo registra en un archivo de log y avisa con una notificación. |
 
 ---
 
@@ -156,13 +162,15 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 | 2. Máx. 2 teclas o clics para pegar sin anotar | F1 (1 tecla), R11, R21 |
 | 3. Editor sin espera perceptible | R1, NF1, NF2 |
 | 4. Todo se puede deshacer | R18, R19, R27 |
-| 5. Una semana sin volver a la herramienta de Windows | Todo lo anterior + R1 (siempre disponible) |
+| 5. Una semana sin volver a la herramienta de Windows | Todo lo anterior + R1 (siempre disponible) + R32 (nunca muere en silencio) |
 
 ---
 
 ## 9. Historial de revisión
 
 No quedan preguntas abiertas.
+
+- **v1.1 (2026-11-10):** a partir de la crítica de arquitectura se agregó **R32** (errores) y la verificación del portapapeles en **R21**.
 
 ### Resueltas (2026-11-10)
 - **P1.** Clic sin arrastrar → monitor donde se hizo clic (R8).
