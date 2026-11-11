@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CapturaTool.Capture;
 using CapturaTool.Editor;
 using CapturaTool.Output;
@@ -17,9 +18,11 @@ public class TrayApp : ApplicationContext
     private readonly Logger _logger;
     private readonly ClipboardWriter _clipboard;
 
-    // Selección en curso: null cuando no hay ninguna abierta
+    // Una ventana de selección por monitor, creada una vez y reutilizada
+    private readonly List<SelectionOverlay> _overlays = new();
+
+    // Capturas de la selección en curso: null cuando no hay ninguna abierta
     private List<MonitorCapture>? _captures;
-    private List<SelectionOverlay>? _overlays;
 
     public Notifier Notifier { get; }
 
@@ -65,61 +68,111 @@ public class TrayApp : ApplicationContext
                 "CapturaTool: atajo no disponible",
                 "No se pudo activar Ctrl + Alt + S porque otro programa lo usa. Puedes capturar desde el menú del ícono.");
         }
+
+        // Crear las ventanas de selección ahora, para que la primera captura sea rápida (NF1)
+        EnsureOverlays(Screen.AllScreens.Select(s => s.Bounds).ToList());
     }
 
     private void Capture()
     {
-        if (_overlays != null)
+        if (_captures != null)
         {
             return; // ya hay una selección abierta
         }
 
+        // NF1: tiempo desde el atajo hasta que la selección se ve
+        var timer = Stopwatch.StartNew();
+
         // Primero congelar todos los monitores, después mostrar las ventanas (R6)
         _captures = ScreenCapture.CaptureAllMonitors();
-        _overlays = new List<SelectionOverlay>();
 
-        foreach (MonitorCapture capture in _captures)
+        // Normalmente las ventanas ya existen; solo se recrean si cambiaron los monitores
+        EnsureOverlays(_captures.Select(c => c.Bounds).ToList());
+
+        for (int i = 0; i < _overlays.Count; i++)
         {
-            var overlay = new SelectionOverlay(capture);
-            overlay.SelectionCompleted += (sender, area) => OnSelectionCompleted(capture, area);
-            overlay.Cancelled += (sender, e) => EndSelection();
-            _overlays.Add(overlay);
-            overlay.Show();
+            _overlays[i].Begin(_captures[i]);
         }
 
         // El foco va al monitor donde está el mouse, para que Esc funcione de inmediato
         SelectionOverlay underMouse =
-            _overlays.FirstOrDefault(o => o.Bounds.Contains(Cursor.Position)) ?? _overlays[0];
+            _overlays.FirstOrDefault(o => o.MonitorBounds.Contains(Cursor.Position)) ?? _overlays[0];
         underMouse.Activate();
+
+        // Dibujar ya (lo haría igual un instante después) para medir cuándo se ve de verdad
+        foreach (SelectionOverlay overlay in _overlays)
+        {
+            overlay.Update();
+        }
+        _logger.Write($"Medición: selección visible en {timer.ElapsedMilliseconds} ms");
     }
 
-    private void OnSelectionCompleted(MonitorCapture capture, Rectangle area)
+    /// <summary>
+    /// Deja lista una ventana de selección por monitor. Crear ventanas es lento (NF1),
+    /// así que se crean una vez y se reutilizan; solo se recrean si cambian los monitores.
+    /// </summary>
+    private void EnsureOverlays(List<Rectangle> monitors)
     {
+        bool same = _overlays.Count == monitors.Count
+            && _overlays.Select(o => o.MonitorBounds).SequenceEqual(monitors);
+        if (same)
+        {
+            return;
+        }
+
+        foreach (SelectionOverlay old in _overlays)
+        {
+            old.Dispose();
+        }
+        _overlays.Clear();
+
+        foreach (Rectangle monitor in monitors)
+        {
+            var overlay = new SelectionOverlay(monitor);
+            overlay.SelectionCompleted += (sender, area) => OnSelectionCompleted(overlay, area);
+            overlay.Cancelled += (sender, e) => EndSelection();
+            _ = overlay.Handle; // crea la ventana de Windows ya (oculta), para no pagarlo al capturar
+            _overlays.Add(overlay);
+        }
+    }
+
+    private void OnSelectionCompleted(SelectionOverlay overlay, Rectangle area)
+    {
+        if (_captures == null)
+        {
+            return;
+        }
+
+        // NF2: tiempo desde que se suelta el mouse hasta que el editor se ve
+        var timer = Stopwatch.StartNew();
+
         // Copiar la zona antes de liberar las capturas
+        MonitorCapture capture = _captures[_overlays.IndexOf(overlay)];
         Bitmap image = capture.Crop(area);
         EndSelection();
 
         var editor = new EditorForm(image, _clipboard, Notifier); // el editor pasa a ser dueño de la imagen
         editor.Show();
         editor.Activate();
+
+        editor.RenderNow();
+        _logger.Write($"Medición: editor visible en {timer.ElapsedMilliseconds} ms");
     }
 
-    /// <summary>Cierra todos los overlays y libera las capturas.</summary>
+    /// <summary>Oculta los overlays (quedan listos para la próxima vez) y libera las capturas.</summary>
     private void EndSelection()
     {
-        if (_overlays == null || _captures == null)
+        if (_captures == null)
         {
-            return; // ya se cerró (cerrar un overlay vuelve a llamar aquí)
+            return; // ya se terminó
         }
 
-        List<SelectionOverlay> overlays = _overlays;
         List<MonitorCapture> captures = _captures;
-        _overlays = null;
         _captures = null;
 
-        foreach (SelectionOverlay overlay in overlays)
+        foreach (SelectionOverlay overlay in _overlays)
         {
-            overlay.Close(); // Close también libera la ventana
+            overlay.End();
         }
         foreach (MonitorCapture capture in captures)
         {
@@ -139,6 +192,10 @@ public class TrayApp : ApplicationContext
         if (disposing)
         {
             EndSelection();
+            foreach (SelectionOverlay overlay in _overlays)
+            {
+                overlay.Dispose();
+            }
             _hotkey.Dispose();
             _trayIcon.Dispose();
             _menu.Dispose();

@@ -62,6 +62,16 @@ public class EditorForm : Form
             size.Height);
     }
 
+    /// <summary>
+    /// Dibuja la ventana y el lienzo de inmediato, en lugar de esperar a que Windows lo pida.
+    /// Se usa para medir cuándo el editor se ve de verdad (NF2).
+    /// </summary>
+    public void RenderNow()
+    {
+        Update();
+        _canvas.Update();
+    }
+
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
         if (keyData == (Keys.Control | Keys.C))

@@ -38,8 +38,9 @@ public class EditorCanvas : Control
 
         if (View.Scale < 1f)
         {
-            // Reducida: alta calidad. TileFlipXY evita un borde semitransparente en las orillas.
-            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            // Reducida: bilineal de alta calidad (la bicúbica tardaba demasiado: NF2).
+            // TileFlipXY evita un borde semitransparente en las orillas.
+            g.InterpolationMode = InterpolationMode.HighQualityBilinear;
             g.PixelOffsetMode = PixelOffsetMode.HighQuality;
             using var attributes = new ImageAttributes();
             attributes.SetWrapMode(WrapMode.TileFlipXY);

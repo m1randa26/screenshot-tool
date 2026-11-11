@@ -3,12 +3,14 @@ namespace CapturaTool.Capture;
 /// <summary>
 /// Ventana que cubre un monitor con su imagen congelada oscurecida (R6).
 /// Arrastrar = zona (R7), clic = monitor completo (R8), Esc = cancelar (R9).
-/// Hay una por monitor; la imagen la sigue siendo de quien creó el overlay.
+/// Hay una por monitor. Se crea una sola vez y se reutiliza en cada captura
+/// (crear y destruir ventanas cada vez era lento: NF1). La captura sigue siendo
+/// de quien llama a Begin.
 /// </summary>
 public class SelectionOverlay : Form
 {
-    private readonly MonitorCapture _capture;
-    private readonly Bitmap _darkened; // copia oscurecida, preparada una sola vez
+    private MonitorCapture? _capture;
+    private Bitmap? _darkened; // copia oscurecida, preparada una vez por captura
 
     private bool _dragging;
     private Point _start;
@@ -20,10 +22,10 @@ public class SelectionOverlay : Form
     /// <summary>El usuario canceló (Esc o cerró la ventana).</summary>
     public event EventHandler? Cancelled;
 
-    public SelectionOverlay(MonitorCapture capture)
+    /// <param name="monitorBounds">Monitor que cubre esta ventana, en píxeles físicos.</param>
+    public SelectionOverlay(Rectangle monitorBounds)
     {
-        _capture = capture;
-        _darkened = CreateDarkened(capture.Image);
+        MonitorBounds = monitorBounds;
 
         Text = "CapturaTool: selección";
         FormBorderStyle = FormBorderStyle.None;
@@ -34,7 +36,35 @@ public class SelectionOverlay : Form
         DoubleBuffered = true;
         AutoScaleMode = AutoScaleMode.None;
         Cursor = Cursors.Cross;
-        Bounds = capture.Bounds;
+        Bounds = monitorBounds;
+    }
+
+    /// <summary>Monitor que cubre esta ventana.</summary>
+    public Rectangle MonitorBounds { get; }
+
+    /// <summary>Muestra la ventana con una captura nueva de su monitor.</summary>
+    public void Begin(MonitorCapture capture)
+    {
+        _capture = capture;
+        _darkened?.Dispose();
+        _darkened = CreateDarkened(capture.Image);
+        _dragging = false;
+        _selection = Rectangle.Empty;
+
+        Bounds = MonitorBounds;
+        Show();
+        // Volver a fijar posición y tamaño exactos por si WinForms los ajustó al mostrarla
+        Bounds = MonitorBounds;
+        Invalidate();
+    }
+
+    /// <summary>Oculta la ventana y suelta la imagen (la ventana queda lista para la próxima vez).</summary>
+    public void End()
+    {
+        Hide();
+        _capture = null;
+        _darkened?.Dispose();
+        _darkened = null;
     }
 
     private static Bitmap CreateDarkened(Bitmap source)
@@ -48,20 +78,13 @@ public class SelectionOverlay : Form
         return result;
     }
 
-    protected override void OnShown(EventArgs e)
-    {
-        base.OnShown(e);
-        // Volver a fijar posición y tamaño exactos por si WinForms los ajustó al mostrarla
-        Bounds = _capture.Bounds;
-    }
-
     protected override void OnDpiChanged(DpiChangedEventArgs e)
     {
         // Con monitores de escalado distinto, Windows sugiere cambiar el tamaño de la ventana.
         // Aquí no queremos eso: la ventana debe medir exactamente lo que mide el monitor.
         e.Cancel = true;
         base.OnDpiChanged(e);
-        Bounds = _capture.Bounds;
+        Bounds = MonitorBounds;
     }
 
     protected override void OnPaintBackground(PaintEventArgs e)
@@ -71,6 +94,11 @@ public class SelectionOverlay : Form
 
     protected override void OnPaint(PaintEventArgs e)
     {
+        if (_capture == null || _darkened == null)
+        {
+            return; // oculta, sin captura
+        }
+
         Graphics g = e.Graphics;
 
         // Solo se redibuja la parte que cambió (e.ClipRectangle), a escala 1:1
@@ -88,7 +116,7 @@ public class SelectionOverlay : Form
     protected override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
-        if (e.Button == MouseButtons.Left)
+        if (e.Button == MouseButtons.Left && _capture != null)
         {
             _dragging = true;
             _start = e.Location;
@@ -111,7 +139,7 @@ public class SelectionOverlay : Form
     protected override void OnMouseUp(MouseEventArgs e)
     {
         base.OnMouseUp(e);
-        if (e.Button != MouseButtons.Left || !_dragging)
+        if (e.Button != MouseButtons.Left || !_dragging || _capture == null)
         {
             return;
         }
@@ -134,9 +162,11 @@ public class SelectionOverlay : Form
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         base.OnFormClosing(e);
-        // Cerrar la ventana a mano (por ejemplo Alt + F4) también cancela
+        // Cerrar la ventana a mano (por ejemplo Alt + F4) cancela la selección,
+        // pero la ventana no se destruye: se reutiliza en la próxima captura
         if (e.CloseReason == CloseReason.UserClosing)
         {
+            e.Cancel = true;
             Cancelled?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -153,7 +183,7 @@ public class SelectionOverlay : Form
     {
         if (disposing)
         {
-            _darkened.Dispose();
+            _darkened?.Dispose();
         }
         base.Dispose(disposing);
     }
