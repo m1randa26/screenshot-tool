@@ -29,4 +29,19 @@ public static class ShapeGeometry
     {
         return shape.Width < MinSize && shape.Height < MinSize;
     }
+
+    /// <summary>Rectángulo más pequeño que contiene todos los puntos (por ejemplo, un trazo libre).</summary>
+    public static RectangleF BoundsOf(IReadOnlyList<PointF> points)
+    {
+        if (points.Count == 0)
+        {
+            return RectangleF.Empty;
+        }
+
+        float left = points.Min(p => p.X);
+        float top = points.Min(p => p.Y);
+        float right = points.Max(p => p.X);
+        float bottom = points.Max(p => p.Y);
+        return RectangleF.FromLTRB(left, top, right, bottom);
+    }
 }

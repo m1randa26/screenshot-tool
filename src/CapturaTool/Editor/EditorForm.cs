@@ -52,6 +52,7 @@ public class EditorForm : Form
         AddToolButton(strip, Tool.Rectangle, "Rectángulo");
         AddToolButton(strip, Tool.Ellipse, "Círculo");
         AddToolButton(strip, Tool.Arrow, "Flecha");
+        AddToolButton(strip, Tool.Highlighter, "Resaltador");
         strip.Items.Add(new ToolStripSeparator());
 
         // Paleta (R13)

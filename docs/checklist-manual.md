@@ -141,3 +141,15 @@ Start-Sleep -Seconds 15
 - [x] Una flecha corta tiene la punta proporcionada (más pequeña), no un triángulo enorme.
 - [x] Respeta el color elegido; `Ctrl + Z` y `Ctrl + Y` funcionan con flechas. (R13, R18, R19)
 - [x] Un clic sin arrastrar no crea nada.
+
+## T10. Resaltador
+
+- [x] La barra muestra **Resaltador** después de **Flecha**. (R12)
+- [x] Elegir amarillo y resaltar una línea de texto de la captura: el trazo es semitransparente y **el texto se sigue leyendo**. (R17)
+- [x] El trazo sigue el mouse (trazo libre), con puntas redondeadas, mientras se arrastra. (R17)
+- [x] Hacer un trazo que se cruce consigo mismo (por ejemplo, un "8"): **no** quedan manchas más oscuras en los cruces; el tono es igual en todo el trazo. (R17)
+- [x] Dos resaltados distintos que se superponen sí se ven más oscuros donde se cruzan (son dos anotaciones).
+- [x] En una captura de pantalla completa (reducida), el trazo pasa exactamente por donde pasó el mouse.
+- [x] Un trazo largo, de lado a lado de la pantalla, se dibuja fluido.
+- [x] Respeta el color elegido; `Ctrl + Z` y `Ctrl + Y` funcionan con resaltados. (R13, R18, R19)
+- [x] Un clic sin arrastrar no crea nada.

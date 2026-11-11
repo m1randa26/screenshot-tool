@@ -24,6 +24,7 @@ public class EditorCanvas : Control
     private bool _drawing;
     private PointF _start;
     private PointF _current;
+    private readonly List<PointF> _stroke = new(); // puntos del resaltador en curso
 
     public EditorCanvas(AnnotationDocument document)
     {
@@ -154,6 +155,8 @@ public class EditorCanvas : Control
         _drawing = true;
         _start = View.ClampToImage(View.ScreenToImage(e.Location));
         _current = _start;
+        _stroke.Clear();
+        _stroke.Add(_start);
     }
 
     protected override void OnMouseMove(MouseEventArgs e)
@@ -166,6 +169,7 @@ public class EditorCanvas : Control
 
         // Si el mouse sale de la captura, la figura se queda en el borde
         _current = View.ClampToImage(View.ScreenToImage(e.Location));
+        AddStrokePoint(_current);
         Invalidate();
     }
 
@@ -179,6 +183,7 @@ public class EditorCanvas : Control
 
         _drawing = false;
         _current = View.ClampToImage(View.ScreenToImage(e.Location));
+        AddStrokePoint(_current);
 
         Annotation? shape = CreateShape();
         if (shape != null)
@@ -200,9 +205,26 @@ public class EditorCanvas : Control
         }
     }
 
+    /// <summary>Agrega un punto al trazo del resaltador, si el mouse se movió.</summary>
+    private void AddStrokePoint(PointF point)
+    {
+        if (CurrentTool == Tool.Highlighter && point != _stroke[^1])
+        {
+            _stroke.Add(point);
+        }
+    }
+
     /// <summary>La figura entre el punto inicial y el actual, o null si es diminuta (un clic).</summary>
     private Annotation? CreateShape()
     {
+        if (CurrentTool == Tool.Highlighter)
+        {
+            // El resaltador es de trazo libre: se mide todo el recorrido, no solo inicio y fin
+            return ShapeGeometry.IsTooSmall(ShapeGeometry.BoundsOf(_stroke))
+                ? null
+                : new HighlighterAnnotation(_stroke, CurrentColor);
+        }
+
         RectangleF bounds = ShapeGeometry.FromPoints(_start, _current);
         if (ShapeGeometry.IsTooSmall(bounds))
         {

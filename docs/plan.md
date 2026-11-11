@@ -65,7 +65,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
   *Cumple:* R12 (parcial), R16
   *Hecho cuando:* la flecha apunta donde soltaste el mouse, también con zoom.
 
-- [ ] **T10. Resaltador de trazo libre**
+- [x] **T10. Resaltador de trazo libre**
   Trazo semitransparente uniforme (sin manchas más oscuras donde el trazo se cruza consigo mismo).
   *Cumple:* R12 (parcial), R17
   *Hecho cuando:* se puede resaltar texto y se sigue leyendo debajo.
