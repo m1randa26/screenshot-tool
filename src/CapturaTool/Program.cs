@@ -23,7 +23,7 @@ static class Program
 
         try
         {
-            using var trayApp = new TrayApp();
+            using var trayApp = new TrayApp(logger);
             errorHandler.Notifier = trayApp.Notifier;
 
             logger.Write("Programa iniciado");

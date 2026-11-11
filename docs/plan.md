@@ -23,7 +23,7 @@
 
 ## Etapa 1: Walking skeleton (riesgos altos)
 
-- [ ] **T03. Atajo global**
+- [x] **T03. Atajo global**
   `GlobalHotkey`: `Ctrl + Alt + S` y el menú **Capturar** disparan la misma acción (por ahora, solo una notificación de prueba). Avisar si el atajo no se puede registrar.
   *Cumple:* R4, R5
   *Hecho cuando:* el atajo funciona desde cualquier programa; con el atajo ocupado aparece el aviso y el menú sigue funcionando.

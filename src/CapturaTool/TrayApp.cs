@@ -10,11 +10,15 @@ public class TrayApp : ApplicationContext
 {
     private readonly NotifyIcon _trayIcon;
     private readonly ContextMenuStrip _menu;
+    private readonly GlobalHotkey _hotkey;
+    private readonly Logger _logger;
 
     public Notifier Notifier { get; }
 
-    public TrayApp()
+    public TrayApp(Logger logger)
     {
+        _logger = logger;
+
         _menu = new ContextMenuStrip();
         _menu.Items.Add("Capturar", null, (sender, e) => Capture());
 
@@ -40,12 +44,24 @@ public class TrayApp : ApplicationContext
         };
 
         Notifier = new Notifier(_trayIcon);
+
+        // El atajo y el menú Capturar hacen lo mismo (R4)
+        _hotkey = new GlobalHotkey();
+        _hotkey.Pressed += (sender, e) => Capture();
+        if (!_hotkey.Register(KeyModifiers.Control | KeyModifiers.Alt, Keys.S))
+        {
+            // R5: avisar y dejar el menú Capturar como alternativa
+            _logger.Write("No se pudo registrar el atajo Ctrl + Alt + S (otro programa lo usa)");
+            Notifier.Error(
+                "CapturaTool: atajo no disponible",
+                "No se pudo activar Ctrl + Alt + S porque otro programa lo usa. Puedes capturar desde el menú del ícono.");
+        }
     }
 
     private void Capture()
     {
-        // Provisional: en T03 esto inicia la captura
-        Notifier.Info("CapturaTool", "Capturar todavía no está disponible.");
+        // Provisional: en T04 esto inicia la captura de verdad
+        Notifier.Info("CapturaTool", "Captura iniciada (prueba).");
     }
 
     private void Exit()
@@ -59,6 +75,7 @@ public class TrayApp : ApplicationContext
     {
         if (disposing)
         {
+            _hotkey.Dispose();
             _trayIcon.Dispose();
             _menu.Dispose();
         }
