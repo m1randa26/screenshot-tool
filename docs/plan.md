@@ -51,7 +51,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
 
 ## Etapa 2: Editor
 
-- [ ] **T07. Modelo de anotaciones + deshacer/rehacer**
+- [x] **T07. Modelo de anotaciones + deshacer/rehacer**
   `AnnotationDocument` con pilas de deshacer y rehacer. Clase base de anotación. Solo lógica, con pruebas.
   *Cumple:* R18, R19, R20
   *Hecho cuando:* pruebas automáticas de agregar / deshacer / rehacer / "agregar después de deshacer vacía el rehacer".
