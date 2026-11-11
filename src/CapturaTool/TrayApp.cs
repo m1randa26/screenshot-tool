@@ -1,5 +1,6 @@
 using CapturaTool.Capture;
 using CapturaTool.Editor;
+using CapturaTool.Output;
 using CapturaTool.Platform;
 
 namespace CapturaTool;
@@ -14,6 +15,7 @@ public class TrayApp : ApplicationContext
     private readonly ContextMenuStrip _menu;
     private readonly GlobalHotkey _hotkey;
     private readonly Logger _logger;
+    private readonly ClipboardWriter _clipboard;
 
     // Selección en curso: null cuando no hay ninguna abierta
     private List<MonitorCapture>? _captures;
@@ -24,6 +26,7 @@ public class TrayApp : ApplicationContext
     public TrayApp(Logger logger)
     {
         _logger = logger;
+        _clipboard = new ClipboardWriter(logger);
 
         _menu = new ContextMenuStrip();
         _menu.Items.Add("Capturar", null, (sender, e) => Capture());
@@ -96,7 +99,7 @@ public class TrayApp : ApplicationContext
         Bitmap image = capture.Crop(area);
         EndSelection();
 
-        var editor = new EditorForm(image); // el editor pasa a ser dueño de la imagen
+        var editor = new EditorForm(image, _clipboard, Notifier); // el editor pasa a ser dueño de la imagen
         editor.Show();
         editor.Activate();
     }

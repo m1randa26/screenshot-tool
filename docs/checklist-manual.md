@@ -72,3 +72,21 @@ En cada caso, la ventana "Vista previa (provisional)" muestra la captura y sus m
 - [x] Con dos monitores, el editor se abre en el monitor donde se hizo la selección.
 - [x] Con un monitor al 125 % o 150 %: la captura de pantalla completa se ve entera y una zona pequeña se ve nítida.
 - [x] Después de cerrar el editor, la memoria del proceso vuelve aproximadamente al nivel de reposo (puede tardar unos segundos).
+
+## T06. Copiar al portapapeles
+
+- [x] `Ctrl + C` en el editor: aparece "Copiado al portapapeles" y el editor se cierra. (R21)
+- [x] Pegar en **Slack** con `Ctrl + V`: funciona **10 de 10** veces (una captura nueva cada vez). (R21)
+- [x] Pegar en **GitHub** (un comentario de issue en el navegador): funciona **10 de 10** veces. (R21)
+- [x] La imagen pegada se ve igual de nítida que la captura (mismas medidas).
+- [x] Después de copiar, usar **Salir** en CapturaTool: la imagen se puede seguir pegando.
+- [x] **Portapapeles bloqueado:** ejecutar en PowerShell el bloque de abajo (bloquea el portapapeles 15 segundos) y, mientras tanto, presionar `Ctrl + C` en el editor: tras un segundo aparece el aviso "No se pudo copiar…", **no** aparece la notificación de éxito y el editor sigue abierto con la captura. (R22)
+- [x] Al terminar el bloqueo, `Ctrl + C` de nuevo funciona y cierra el editor. (R22)
+- [x] El log contiene "No se pudo copiar al portapapeles tras 10 intentos" con el detalle del error. (R22)
+
+```powershell
+Add-Type -Namespace W -Name C -MemberDefinition '[DllImport("user32.dll")] public static extern bool OpenClipboard(IntPtr h); [DllImport("user32.dll")] public static extern bool CloseClipboard();'
+[W.C]::OpenClipboard([IntPtr]::Zero)   # True = portapapeles bloqueado
+Start-Sleep -Seconds 15
+[W.C]::CloseClipboard()
+```

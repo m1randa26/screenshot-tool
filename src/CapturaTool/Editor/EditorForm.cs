@@ -1,3 +1,6 @@
+using CapturaTool.Output;
+using CapturaTool.Platform;
+
 namespace CapturaTool.Editor;
 
 /// <summary>
@@ -8,10 +11,14 @@ public class EditorForm : Form
     private readonly Bitmap _image;
     private readonly EditorCanvas _canvas;
     private readonly Rectangle _workArea; // área útil del monitor donde se abre
+    private readonly ClipboardWriter _clipboard;
+    private readonly Notifier _notifier;
 
-    public EditorForm(Bitmap image)
+    public EditorForm(Bitmap image, ClipboardWriter clipboard, Notifier notifier)
     {
         _image = image;
+        _clipboard = clipboard;
+        _notifier = notifier;
 
         Text = "CapturaTool";
         StartPosition = FormStartPosition.Manual;
@@ -53,6 +60,37 @@ public class EditorForm : Form
             _workArea.Y + (_workArea.Height - size.Height) / 2,
             size.Width,
             size.Height);
+    }
+
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        if (keyData == (Keys.Control | Keys.C))
+        {
+            CopyToClipboard();
+            return true;
+        }
+        return base.ProcessCmdKey(ref msg, keyData);
+    }
+
+    private void CopyToClipboard()
+    {
+        // Por ahora se copia la captura sin anotaciones; en T12 se copiará con ellas
+        if (_clipboard.TryCopy(_image))
+        {
+            // R21: el aviso aparece solo si la copia se verificó
+            _notifier.Info("CapturaTool", "Copiado al portapapeles");
+            Close();
+        }
+        else
+        {
+            // R22: no se cierra el editor, para no perder la captura
+            MessageBox.Show(
+                this,
+                "No se pudo copiar al portapapeles porque otro programa lo está usando.\n\nIntenta de nuevo con Ctrl + C.",
+                "CapturaTool",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+        }
     }
 
     protected override void Dispose(bool disposing)

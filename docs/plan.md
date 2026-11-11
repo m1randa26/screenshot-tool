@@ -39,7 +39,7 @@
   *Cumple:* R11
   *Hecho cuando:* una captura de pantalla completa se ve entera en el editor; las pruebas de `ViewTransform` pasan.
 
-- [ ] **T06. Copiar al portapapeles (el dolor principal)**
+- [x] **T06. Copiar al portapapeles (el dolor principal)**
   `ClipboardWriter`: dos formatos, reintentos, **verificación** posterior y notificación "Copiado al portapapeles". Si falla: mensaje claro y el editor sigue abierto. `Ctrl + C` cierra el editor si la copia funcionó.
   *Cumple:* R21 (sin anotaciones todavía), R22
   *Hecho cuando:* checklist manual: pegar en Slack y en GitHub funciona 10 de 10 veces; con el portapapeles bloqueado a propósito por otro programa, se avisa y no se pierde la captura.
