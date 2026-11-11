@@ -16,7 +16,7 @@
   *Cumple:* NF4 (configuración), NF6, NF7
   *Hecho cuando:* `dotnet build` y `dotnet test` pasan (con una prueba de ejemplo) y la app abre y cierra sin error.
 
-- [ ] **T02. Programa en la bandeja, a prueba de fallos**
+- [x] **T02. Programa en la bandeja, a prueba de fallos**
   `Program` + `SingleInstance` + `ErrorHandler`/`Logger` + `TrayApp` con ícono y menú (Capturar · Configuración, todavía deshabilitada · Salir).
   *Cumple:* R2, R3, R32
   *Hecho cuando:* el ícono aparece; abrir el .exe dos veces no duplica el programa; un error provocado a propósito queda en el log y se avisa con una notificación, sin que el programa muera.
