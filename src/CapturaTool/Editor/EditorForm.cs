@@ -4,19 +4,26 @@ using CapturaTool.Platform;
 namespace CapturaTool.Editor;
 
 /// <summary>
-/// Ventana del editor. Es dueña de la captura: la libera al cerrarse.
+/// Ventana del editor: barra de herramientas, paleta y lienzo.
+/// Es dueña del documento (que a su vez es dueño de la captura): lo libera al cerrarse.
 /// </summary>
 public class EditorForm : Form
 {
-    private readonly Bitmap _image;
+    private readonly AnnotationDocument _document;
     private readonly EditorCanvas _canvas;
+    private readonly ToolStrip _toolStrip;
     private readonly Rectangle _workArea; // área útil del monitor donde se abre
     private readonly ClipboardWriter _clipboard;
     private readonly Notifier _notifier;
 
+    // Botones de la barra, para marcar cuál está elegido
+    private readonly Dictionary<Tool, ToolStripButton> _toolButtons = new();
+    private readonly Dictionary<Color, ToolStripButton> _colorButtons = new();
+    private readonly List<Bitmap> _swatches = new(); // cuadritos de color; dueño: este formulario
+
     public EditorForm(Bitmap image, ClipboardWriter clipboard, Notifier notifier)
     {
-        _image = image;
+        _document = new AnnotationDocument(image); // el documento pasa a ser dueño de la imagen
         _clipboard = clipboard;
         _notifier = notifier;
 
@@ -24,13 +31,91 @@ public class EditorForm : Form
         StartPosition = FormStartPosition.Manual;
         MinimumSize = new Size(400, 300);
 
-        _canvas = new EditorCanvas(image) { Dock = DockStyle.Fill };
+        _canvas = new EditorCanvas(_document) { Dock = DockStyle.Fill };
+        _toolStrip = CreateToolStrip();
+
+        // El lienzo se agrega primero para que la barra quede arriba y el lienzo ocupe el resto
         Controls.Add(_canvas);
+        Controls.Add(_toolStrip);
+        UpdateToolStrip();
 
         // Se abre en el monitor donde está el mouse, que es donde se acaba de seleccionar.
         // La posición se fija ya para que la ventana se cree en ese monitor (con su escalado).
         _workArea = Screen.FromPoint(Cursor.Position).WorkingArea;
         Location = _workArea.Location;
+    }
+
+    private ToolStrip CreateToolStrip()
+    {
+        var strip = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden };
+
+        AddToolButton(strip, Tool.Rectangle, "Rectángulo");
+        AddToolButton(strip, Tool.Ellipse, "Círculo");
+        strip.Items.Add(new ToolStripSeparator());
+
+        // Paleta (R13)
+        foreach ((string name, Color color) in Palette.Colors)
+        {
+            Bitmap swatch = CreateSwatch(color);
+            _swatches.Add(swatch);
+
+            var button = new ToolStripButton
+            {
+                Image = swatch,
+                DisplayStyle = ToolStripItemDisplayStyle.Image,
+                ToolTipText = name,
+            };
+            button.Click += (sender, e) => SelectColor(color);
+            strip.Items.Add(button);
+            _colorButtons[color] = button;
+        }
+
+        return strip;
+    }
+
+    private void AddToolButton(ToolStrip strip, Tool tool, string text)
+    {
+        var button = new ToolStripButton(text) { DisplayStyle = ToolStripItemDisplayStyle.Text };
+        button.Click += (sender, e) => SelectTool(tool);
+        strip.Items.Add(button);
+        _toolButtons[tool] = button;
+    }
+
+    /// <summary>Cuadrito de 16 × 16 con el color y un borde gris (para que el blanco se vea).</summary>
+    private static Bitmap CreateSwatch(Color color)
+    {
+        var swatch = new Bitmap(16, 16);
+        using Graphics g = Graphics.FromImage(swatch);
+        using var fill = new SolidBrush(color);
+        using var border = new Pen(Color.Gray);
+        g.FillRectangle(fill, 0, 0, 16, 16);
+        g.DrawRectangle(border, 0, 0, 15, 15);
+        return swatch;
+    }
+
+    private void SelectTool(Tool tool)
+    {
+        _canvas.CurrentTool = tool;
+        UpdateToolStrip();
+    }
+
+    private void SelectColor(Color color)
+    {
+        _canvas.CurrentColor = color;
+        UpdateToolStrip();
+    }
+
+    /// <summary>Marca en la barra la herramienta y el color elegidos.</summary>
+    private void UpdateToolStrip()
+    {
+        foreach ((Tool tool, ToolStripButton button) in _toolButtons)
+        {
+            button.Checked = tool == _canvas.CurrentTool;
+        }
+        foreach ((Color color, ToolStripButton button) in _colorButtons)
+        {
+            button.Checked = color == _canvas.CurrentColor;
+        }
     }
 
     protected override void OnLoad(EventArgs e)
@@ -42,8 +127,9 @@ public class EditorForm : Form
 
     private void PlaceOnScreen()
     {
-        // Tamaño de ventana necesario para mostrar la captura a tamaño real
-        Size needed = SizeFromClientSize(_image.Size);
+        // Tamaño de ventana necesario para mostrar la captura a tamaño real, más la barra
+        Size image = _document.BaseImage.Size;
+        Size needed = SizeFromClientSize(new Size(image.Width, image.Height + _toolStrip.Height));
 
         if (needed.Width > _workArea.Width || needed.Height > _workArea.Height)
         {
@@ -74,10 +160,25 @@ public class EditorForm : Form
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
-        if (keyData == (Keys.Control | Keys.C))
+        switch (keyData)
         {
-            CopyToClipboard();
-            return true;
+            case Keys.Control | Keys.C:
+                CopyToClipboard();
+                return true;
+
+            case Keys.Control | Keys.Z: // R18
+                if (_document.Undo())
+                {
+                    _canvas.DocumentChanged();
+                }
+                return true;
+
+            case Keys.Control | Keys.Y: // R19
+                if (_document.Redo())
+                {
+                    _canvas.DocumentChanged();
+                }
+                return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);
     }
@@ -85,7 +186,7 @@ public class EditorForm : Form
     private void CopyToClipboard()
     {
         // Por ahora se copia la captura sin anotaciones; en T12 se copiará con ellas
-        if (_clipboard.TryCopy(_image))
+        if (_clipboard.TryCopy(_document.BaseImage))
         {
             // R21: el aviso aparece solo si la copia se verificó
             _notifier.Info("CapturaTool", "Copiado al portapapeles");
@@ -105,10 +206,14 @@ public class EditorForm : Form
 
     protected override void Dispose(bool disposing)
     {
-        base.Dispose(disposing); // libera primero el lienzo, que usa la imagen
+        base.Dispose(disposing); // libera primero el lienzo y la barra, que usan la imagen y los cuadritos
         if (disposing)
         {
-            _image.Dispose();
+            _document.Dispose();
+            foreach (Bitmap swatch in _swatches)
+            {
+                swatch.Dispose();
+            }
         }
     }
 }

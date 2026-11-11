@@ -112,3 +112,21 @@ Start-Sleep -Seconds 15
 | **NF2:** editor visible en menos de 300 ms | 166, 119, 115, 87, 229, 123, 153 ms | ✅ Sí (máximo 229 ms) |
 
 **Decisión (2026-11-10):** se mantiene WinForms (ADR 0002 sin cambios). El usuario aprobó ajustar **NF1 a menos de 250 ms** (spec v1.2): el resto del tiempo es congelar la pantalla con GDI y mostrar las ventanas, y bajarlo más exigía hilos o una técnica de captura más compleja a cambio de unos 40 ms. Con la meta nueva, NF1 se cumple (máximo medido: 239 ms), igual que NF2 y NF3. Se vuelve a medir en T17 con el editor completo.
+
+**Nota (T08, aprobada por el usuario):** la caché de dibujo del editor se guarda **ya reducida, al tamaño del lienzo**, y no a la resolución de la imagen como sugiere la redacción de architecture.md §4. Así, al mover el mouse solo se copia la caché 1:1 (reducir una imagen grande en cada movimiento costaba 34–52 ms con 1080p). La caché se regenera con agregar, deshacer, rehacer y al cambiar el tamaño de la ventana.
+
+## T08. Rectángulo, círculo, paleta y deshacer
+
+- [x] La barra muestra **Rectángulo** (elegido al abrir), **Círculo** y 8 colores, con **rojo** elegido al abrir. (R12, R13)
+- [x] Arrastrar con **Rectángulo** dibuja un rectángulo: solo contorno, sin relleno, mismo grosor siempre. (R15)
+- [x] Arrastrar con **Círculo** dibuja un óvalo: solo contorno, sin relleno. (R15)
+- [x] Elegir otro color: las figuras siguientes salen de ese color; las anteriores no cambian. (R13)
+- [x] Mientras se arrastra, la figura sigue al mouse **sin trabas ni parpadeo**, también en una captura de pantalla completa (que se ve reducida).
+- [x] En una captura de pantalla completa, la figura empieza y termina exactamente donde está el mouse (sin desfase por el zoom).
+- [x] Un clic sin arrastrar no crea nada (`Ctrl + Z` no "deshace" nada invisible).
+- [x] Arrastrar hasta fuera de la captura: la figura se queda en el borde de la imagen.
+- [x] `Ctrl + Z` varias veces quita las figuras de la última a la primera, hasta la captura original. (R18)
+- [x] `Ctrl + Y` las vuelve a poner en orden. (R19)
+- [x] Deshacer, dibujar una figura nueva y presionar `Ctrl + Y`: no vuelve lo deshecho. (R19)
+- [x] Una captura pequeña se sigue viendo a tamaño real, con la barra arriba.
+- [x] Con el monitor al **150 %**, la barra y los cuadritos de color se ven legibles y del tamaño adecuado.

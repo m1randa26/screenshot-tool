@@ -12,6 +12,9 @@ public abstract class Annotation
         Color = color;
     }
 
+    /// <summary>Grosor fijo del contorno, en píxeles de la imagen final (R15, R16).</summary>
+    public const float StrokeWidth = 4f;
+
     public Color Color { get; }
 
     /// <summary>

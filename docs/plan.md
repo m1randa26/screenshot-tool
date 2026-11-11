@@ -56,7 +56,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
   *Cumple:* R18, R19, R20
   *Hecho cuando:* pruebas automáticas de agregar / deshacer / rehacer / "agregar después de deshacer vacía el rehacer".
 
-- [ ] **T08. Caché de dibujo + rectángulo, círculo y paleta**
+- [x] **T08. Caché de dibujo + rectángulo, círculo y paleta**
   Caché (base + anotaciones terminadas) con doble búfer. Herramientas rectángulo y círculo. Paleta de 8 colores, rojo por defecto. `Ctrl + Z` / `Ctrl + Y` conectados al editor.
   *Cumple:* R12 (parcial), R13, R15, R18, R19
   *Hecho cuando:* se dibuja sin trabas sobre una captura 4K; deshacer y rehacer funcionan en pantalla.

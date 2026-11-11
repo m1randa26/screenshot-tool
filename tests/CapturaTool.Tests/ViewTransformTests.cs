@@ -95,4 +95,40 @@ public class ViewTransformTests
         Assert.Equal(1f, view.Scale);
         Assert.False(float.IsInfinity(view.ScreenToImage(new PointF(10, 10)).X));
     }
+
+    [Theory]
+    [InlineData(800, 600, 1000, 700)]
+    [InlineData(3840, 2160, 1920, 1080)]
+    [InlineData(2560, 1440, 1000, 700)]
+    public void Matrix_ConvertsLikeImageToScreen(int imgW, int imgH, int viewW, int viewH)
+    {
+        var view = new ViewTransform(new Size(imgW, imgH), new Size(viewW, viewH));
+        var image = new PointF(123.5f, 456.25f);
+        PointF[] points = { image };
+
+        using var matrix = view.CreateImageToScreenMatrix();
+        matrix.TransformPoints(points);
+
+        PointF expected = view.ImageToScreen(image);
+        Assert.Equal(expected.X, points[0].X, 0.01f);
+        Assert.Equal(expected.Y, points[0].Y, 0.01f);
+    }
+
+    [Fact]
+    public void ClampToImage_PointInside_StaysTheSame()
+    {
+        var view = new ViewTransform(new Size(800, 600), new Size(1000, 700));
+
+        Assert.Equal(new PointF(100, 200), view.ClampToImage(new PointF(100, 200)));
+    }
+
+    [Fact]
+    public void ClampToImage_PointOutside_MovesToNearestEdge()
+    {
+        var view = new ViewTransform(new Size(800, 600), new Size(1000, 700));
+
+        Assert.Equal(new PointF(0, 0), view.ClampToImage(new PointF(-30, -5)));
+        Assert.Equal(new PointF(800, 600), view.ClampToImage(new PointF(900, 650)));
+        Assert.Equal(new PointF(800, 300), view.ClampToImage(new PointF(1200, 300)));
+    }
 }

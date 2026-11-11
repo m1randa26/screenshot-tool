@@ -1,3 +1,5 @@
+using System.Drawing.Drawing2D;
+
 namespace CapturaTool.Editor;
 
 /// <summary>
@@ -10,6 +12,8 @@ public class ViewTransform
 {
     public ViewTransform(Size imageSize, Size viewSize)
     {
+        ImageSize = imageSize;
+
         // Lienzo sin tamaño (por ejemplo, ventana minimizada): se usa tamaño real
         if (viewSize.Width <= 0 || viewSize.Height <= 0)
         {
@@ -35,6 +39,9 @@ public class ViewTransform
         ImageBounds = new Rectangle(offset, displaySize);
     }
 
+    /// <summary>Tamaño de la imagen, en píxeles de imagen.</summary>
+    public Size ImageSize { get; }
+
     /// <summary>Zoom con que se muestra la imagen: 1 = tamaño real, 0.5 = mitad.</summary>
     public float Scale { get; }
 
@@ -53,5 +60,23 @@ public class ViewTransform
         return new PointF(
             image.X * Scale + ImageBounds.X,
             image.Y * Scale + ImageBounds.Y);
+    }
+
+    /// <summary>
+    /// La misma conversión imagen → pantalla, como matriz para Graphics.Transform.
+    /// Así las anotaciones se dibujan en pantalla igual que en la imagen final.
+    /// Quien la recibe debe liberarla.
+    /// </summary>
+    public Matrix CreateImageToScreenMatrix()
+    {
+        return new Matrix(Scale, 0, 0, Scale, ImageBounds.X, ImageBounds.Y);
+    }
+
+    /// <summary>Mueve un punto (en coordenadas de imagen) al borde más cercano si quedó fuera de la imagen.</summary>
+    public PointF ClampToImage(PointF image)
+    {
+        return new PointF(
+            Math.Clamp(image.X, 0, ImageSize.Width),
+            Math.Clamp(image.Y, 0, ImageSize.Height));
     }
 }

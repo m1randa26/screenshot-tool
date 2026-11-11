@@ -1,40 +1,92 @@
+using System.ComponentModel;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using CapturaTool.Editor.Annotations;
 
 namespace CapturaTool.Editor;
 
 /// <summary>
-/// Lienzo del editor: dibuja la captura ajustada al espacio disponible (R11).
-/// La imagen es de EditorForm; el lienzo solo la usa.
+/// Lienzo del editor: muestra la captura ajustada al espacio disponible (R11)
+/// y permite dibujar figuras arrastrando el mouse (R12, R15).
+///
+/// Para que dibujar no se trabe, usa una caché: una imagen del tamaño del lienzo con
+/// la captura ya reducida y las anotaciones terminadas. Se regenera solo al agregar,
+/// deshacer o rehacer, y al cambiar el tamaño. Al mover el mouse se copia la caché tal
+/// cual y encima se dibuja la figura en curso.
+/// El documento es de EditorForm; el lienzo solo lo usa.
 /// </summary>
 public class EditorCanvas : Control
 {
-    private readonly Bitmap _image;
+    private readonly AnnotationDocument _document;
+    private Bitmap? _cache; // dueño: este lienzo
 
-    public EditorCanvas(Bitmap image)
+    // Figura que se está dibujando ahora (coordenadas de imagen)
+    private bool _drawing;
+    private PointF _start;
+    private PointF _current;
+
+    public EditorCanvas(AnnotationDocument document)
     {
-        _image = image;
-        View = new ViewTransform(image.Size, ClientSize);
+        _document = document;
+        View = new ViewTransform(document.BaseImage.Size, ClientSize);
 
         DoubleBuffered = true;
-        ResizeRedraw = true;
         BackColor = Color.FromArgb(45, 45, 48); // gris oscuro: marca dónde termina la captura
+        Cursor = Cursors.Cross;
     }
 
     /// <summary>Cómo se muestra la imagen ahora mismo. Cambia al cambiar el tamaño del lienzo.</summary>
     public ViewTransform View { get; private set; }
 
+    // DesignerSerializationVisibility.Hidden: WinForms lo exige en propiedades públicas de un
+    // control; indica que el diseñador visual no debe guardarlas (aquí no se usa el diseñador).
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Tool CurrentTool { get; set; } = Tool.Rectangle;
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Color CurrentColor { get; set; } = Palette.Default;
+
+    /// <summary>Avisar al lienzo de que el documento cambió por fuera (deshacer, rehacer).</summary>
+    public void DocumentChanged()
+    {
+        RebuildCache();
+        Invalidate();
+    }
+
     protected override void OnResize(EventArgs e)
     {
-        View = new ViewTransform(_image.Size, ClientSize);
+        View = new ViewTransform(_document.BaseImage.Size, ClientSize);
+        RebuildCache();
+        Invalidate();
         base.OnResize(e);
     }
 
-    protected override void OnPaint(PaintEventArgs e)
+    private void RebuildCache()
     {
-        base.OnPaint(e);
-        Graphics g = e.Graphics;
-        var source = new Rectangle(Point.Empty, _image.Size);
+        _cache?.Dispose();
+        _cache = null;
+        if (ClientSize.Width <= 0 || ClientSize.Height <= 0)
+        {
+            return; // ventana minimizada
+        }
+
+        _cache = new Bitmap(ClientSize.Width, ClientSize.Height);
+        using Graphics g = Graphics.FromImage(_cache);
+        g.Clear(BackColor);
+        DrawBaseImage(g);
+
+        using Matrix toScreen = View.CreateImageToScreenMatrix();
+        g.Transform = toScreen;
+        foreach (Annotation annotation in _document.Annotations)
+        {
+            annotation.Draw(g);
+        }
+    }
+
+    private void DrawBaseImage(Graphics g)
+    {
+        Bitmap image = _document.BaseImage;
+        var source = new Rectangle(Point.Empty, image.Size);
 
         if (View.Scale < 1f)
         {
@@ -44,15 +96,133 @@ public class EditorCanvas : Control
             g.PixelOffsetMode = PixelOffsetMode.HighQuality;
             using var attributes = new ImageAttributes();
             attributes.SetWrapMode(WrapMode.TileFlipXY);
-            Rectangle dest = View.ImageBounds;
-            g.DrawImage(_image, dest, 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, attributes);
+            g.DrawImage(image, View.ImageBounds, 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, attributes);
         }
         else
         {
             // Tamaño real: píxel por píxel, sin suavizar
             g.InterpolationMode = InterpolationMode.NearestNeighbor;
             g.PixelOffsetMode = PixelOffsetMode.Half;
-            g.DrawImage(_image, View.ImageBounds, source, GraphicsUnit.Pixel);
+            g.DrawImage(image, View.ImageBounds, source, GraphicsUnit.Pixel);
         }
+    }
+
+    protected override void OnPaintBackground(PaintEventArgs e)
+    {
+        if (_cache == null)
+        {
+            base.OnPaintBackground(e);
+        }
+        // Con caché no hace falta: OnPaint cubre todo el lienzo (evita parpadeo)
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        base.OnPaint(e);
+        if (_cache == null)
+        {
+            return;
+        }
+
+        Graphics g = e.Graphics;
+
+        // La caché ya está al tamaño del lienzo: se copia tal cual (rápido)
+        g.CompositingMode = CompositingMode.SourceCopy;
+        g.InterpolationMode = InterpolationMode.NearestNeighbor;
+        g.DrawImage(_cache, e.ClipRectangle, e.ClipRectangle, GraphicsUnit.Pixel);
+        g.CompositingMode = CompositingMode.SourceOver;
+
+        // Encima, la figura que se está dibujando, con la misma conversión que la imagen final
+        Annotation? inProgress = _drawing ? CreateShape() : null;
+        if (inProgress != null)
+        {
+            using Matrix toScreen = View.CreateImageToScreenMatrix();
+            g.Transform = toScreen;
+            inProgress.Draw(g);
+        }
+    }
+
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+        base.OnMouseDown(e);
+        // Solo se empieza a dibujar dentro de la captura
+        if (e.Button != MouseButtons.Left || !View.ImageBounds.Contains(e.Location))
+        {
+            return;
+        }
+
+        _drawing = true;
+        _start = View.ClampToImage(View.ScreenToImage(e.Location));
+        _current = _start;
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        if (!_drawing)
+        {
+            return;
+        }
+
+        // Si el mouse sale de la captura, la figura se queda en el borde
+        _current = View.ClampToImage(View.ScreenToImage(e.Location));
+        Invalidate();
+    }
+
+    protected override void OnMouseUp(MouseEventArgs e)
+    {
+        base.OnMouseUp(e);
+        if (e.Button != MouseButtons.Left || !_drawing)
+        {
+            return;
+        }
+
+        _drawing = false;
+        _current = View.ClampToImage(View.ScreenToImage(e.Location));
+
+        Annotation? shape = CreateShape();
+        if (shape != null)
+        {
+            _document.Add(shape);
+            RebuildCache();
+        }
+        Invalidate();
+    }
+
+    protected override void OnMouseCaptureChanged(EventArgs e)
+    {
+        base.OnMouseCaptureChanged(e);
+        // Si se pierde el mouse a mitad de un arrastre (por ejemplo, Alt + Tab), se descarta la figura
+        if (_drawing && !Capture)
+        {
+            _drawing = false;
+            Invalidate();
+        }
+    }
+
+    /// <summary>La figura entre el punto inicial y el actual, o null si es diminuta (un clic).</summary>
+    private Annotation? CreateShape()
+    {
+        RectangleF bounds = ShapeGeometry.FromPoints(_start, _current);
+        if (ShapeGeometry.IsTooSmall(bounds))
+        {
+            return null;
+        }
+
+        return CurrentTool switch
+        {
+            Tool.Ellipse => new EllipseAnnotation(bounds, CurrentColor),
+            _ => new RectangleAnnotation(bounds, CurrentColor),
+        };
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _cache?.Dispose();
+            _cache = null;
+        }
+        base.Dispose(disposing);
     }
 }
