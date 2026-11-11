@@ -96,10 +96,9 @@ public class TrayApp : ApplicationContext
         Bitmap image = capture.Crop(area);
         EndSelection();
 
-        // Provisional: en T05 se abre el editor
-        var preview = new PreviewForm(image);
-        preview.Show();
-        preview.Activate();
+        var editor = new EditorForm(image); // el editor pasa a ser dueño de la imagen
+        editor.Show();
+        editor.Activate();
     }
 
     /// <summary>Cierra todos los overlays y libera las capturas.</summary>

@@ -34,7 +34,7 @@
   *Hecho cuando:* checklist manual: captura nítida al 100 %, 125 % y 150 %; dos monitores con escalado distinto; un menú desplegable se puede capturar.
   ⚠️ **Riesgo alto:** si el escalado mixto falla, detenerse y replantear antes de seguir.
 
-- [ ] **T05. Editor mínimo + coordenadas**
+- [x] **T05. Editor mínimo + coordenadas**
   `EditorForm` que muestra la captura ajustada al espacio disponible. `ViewTransform` con pruebas automáticas (conversión pantalla ↔ imagen con distintos zooms).
   *Cumple:* R11
   *Hecho cuando:* una captura de pantalla completa se ve entera en el editor; las pruebas de `ViewTransform` pasan.

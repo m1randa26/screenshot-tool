@@ -62,3 +62,13 @@ En cada caso, la ventana "Vista previa (provisional)" muestra la captura y sus m
 **Memoria**
 
 - [x] Después de cerrar la vista previa, la memoria del proceso (Administrador de tareas) vuelve aproximadamente al nivel anterior a la captura.
+
+## T05. Editor mínimo
+
+- [x] Un clic (pantalla completa) abre el editor maximizado y la captura se ve **entera**, sin barras de desplazamiento. (R11)
+- [x] Una zona pequeña (por ejemplo 300 × 200) se ve a **tamaño real** y nítida, con la ventana ajustada a ella. (R11)
+- [x] Una zona diminuta (por ejemplo 40 × 40) abre una ventana de al menos 400 × 300 con la captura centrada a tamaño real.
+- [x] Al cambiar el tamaño de la ventana, la captura se reajusta para caber y nunca se agranda más allá del tamaño real. (R11)
+- [x] Con dos monitores, el editor se abre en el monitor donde se hizo la selección.
+- [x] Con un monitor al 125 % o 150 %: la captura de pantalla completa se ve entera y una zona pequeña se ve nítida.
+- [x] Después de cerrar el editor, la memoria del proceso vuelve aproximadamente al nivel de reposo (puede tardar unos segundos).
