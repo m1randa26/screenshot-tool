@@ -204,8 +204,15 @@ public class EditorForm : Form
 
     private void CopyToClipboard()
     {
-        // Por ahora se copia la captura sin anotaciones; en T12 se copiará con ellas
-        if (_clipboard.TryCopy(_document.BaseImage))
+        // R21: se copia la imagen final (captura + anotaciones) a resolución original.
+        // El portapapeles guarda su propia copia, así que la imagen se libera al terminar.
+        bool copied;
+        using (Bitmap finalImage = ImageRenderer.Render(_document))
+        {
+            copied = _clipboard.TryCopy(finalImage);
+        }
+
+        if (copied)
         {
             // R21: el aviso aparece solo si la copia se verificó
             _notifier.Info("CapturaTool", "Copiado al portapapeles");

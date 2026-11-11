@@ -168,3 +168,13 @@ Start-Sleep -Seconds 15
 - [x] El texto es de una sola línea, en negrita, y se lee bien sobre la captura; en una captura de pantalla completa (reducida) se ve proporcional y en el lugar del clic. (R14)
 - [x] `Ctrl + Z` y `Ctrl + Y` funcionan con textos ya confirmados; **mientras se escribe** no deshacen nada. (R18, R19)
 - [x] `Ctrl + C` mientras se escribe: el texto se confirma primero (no se pierde) y luego se copia. *(La imagen copiada lleva anotaciones a partir de T12.)*
+
+## T12. Imagen final con anotaciones
+
+- [x] Dibujar **una anotación de cada tipo** (rectángulo, círculo, flecha, resaltador, texto), `Ctrl + C` y pegar en **Slack**: se ven igual que en el editor y en el mismo lugar. (R21)
+- [x] Lo mismo pegando en **GitHub** (comentario de un issue en el navegador). (R21)
+- [x] Captura de **pantalla completa** (en el editor se ve reducida): en la imagen pegada, las anotaciones quedan exactamente donde se pusieron y la imagen tiene la resolución completa del monitor.
+- [x] El texto se lee bien en la imagen pegada; el resaltador deja ver lo de abajo.
+- [x] `Ctrl + C` mientras se escribe un texto: el texto aparece en la imagen pegada.
+- [x] Deshacer una anotación y copiar: la anotación deshecha **no** aparece en la imagen pegada.
+- [x] Una captura sin anotaciones se copia y pega igual que antes.

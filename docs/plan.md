@@ -75,7 +75,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
   *Cumple:* R12 (completo), R14
   *Hecho cuando:* se escribe "bug" sobre la captura y queda legible al pegarla.
 
-- [ ] **T12. Imagen final con anotaciones**
+- [x] **T12. Imagen final con anotaciones**
   `ImageRenderer` genera base + anotaciones en resolución original. `Ctrl + C` ahora copia con anotaciones.
   *Cumple:* R21 (completo)
   *Hecho cuando:* una prueba automática verifica que la imagen final contiene las anotaciones en la posición correcta; al pegar en Slack se ven igual que en el editor.
