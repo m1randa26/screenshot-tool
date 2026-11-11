@@ -90,3 +90,25 @@ Add-Type -Namespace W -Name C -MemberDefinition '[DllImport("user32.dll")] publi
 Start-Sleep -Seconds 15
 [W.C]::CloseClipboard()
 ```
+
+## Hito: esqueleto completo (mediciones)
+
+**Fecha:** 2026-11-10 · **Build:** Release publicado (ReadyToRun) · **Equipo:** 2 monitores 1920 × 1080 al 100 %, 12 procesadores lógicos · **Método:** cronómetro interno (líneas `Medición:` del log) y medición del proceso por script; atajo y mouse simulados.
+
+| Meta | Resultado | ¿Cumple? |
+|---|---|---|
+| **NF1:** selección visible en menos de 200 ms | 227, 203, 284, 236, 275 ms (5 capturas) | ❌ No (todas por encima) |
+| **NF2:** editor visible en menos de 300 ms | Pantalla completa: 284, 331, 286 ms · Zona 600 × 400: 235, 235 ms | ❌ No (1 de 5 por encima; pantalla completa al límite) |
+| **NF3:** CPU en reposo ~0 % | 0 ms de CPU en 60 s | ✅ Sí |
+| **NF3:** memoria en reposo menos de 50 MB | Al arrancar: 6,4 MB privado activo (columna por defecto del Administrador de tareas) / 42,5 MB conjunto de trabajo. Tras 5 capturas: 11,6 MB / 59 MB | ✅ Sí con la columna del Administrador de tareas · ⚠️ el conjunto de trabajo total pasa de 50 MB tras usarlo |
+
+**Diagnóstico:** el tiempo se iba en congelar la pantalla con GDI (68–118 ms), crear y destruir ventanas (hasta 132 ms) y la interpolación bicúbica (34–52 ms). Nada de eso se resolvería cambiando de framework, así que se optimizó dentro de WinForms (opción A): ventanas de selección creadas una vez y reutilizadas, overlays que se ocultan en vez de destruirse e interpolación bilineal en la vista reducida.
+
+**Después de optimizar (opción A), mismo método, 8 capturas:**
+
+| Meta | Resultado | ¿Cumple? |
+|---|---|---|
+| **NF1:** selección visible en menos de 200 ms | 190, 239, 191, 209, 215, 216, 205, 188 ms (congelar 62–105 · mostrar + copia oscura 79–103 · dibujar 22–38) | ⚠️ Casi: 3 de 8 por debajo; el resto pasa por 5–39 ms |
+| **NF2:** editor visible en menos de 300 ms | 166, 119, 115, 87, 229, 123, 153 ms | ✅ Sí (máximo 229 ms) |
+
+**Decisión (2026-11-10):** se mantiene WinForms (ADR 0002 sin cambios). El usuario aprobó ajustar **NF1 a menos de 250 ms** (spec v1.2): el resto del tiempo es congelar la pantalla con GDI y mostrar las ventanas, y bajarlo más exigía hilos o una técnica de captura más compleja a cambio de unos 40 ms. Con la meta nueva, NF1 se cumple (máximo medido: 239 ms), igual que NF2 y NF3. Se vuelve a medir en T17 con el editor completo.

@@ -46,7 +46,7 @@
 
 ### 🏁 Hito: esqueleto completo
 
-Medir **NF1** (menos de 200 ms), **NF2** (menos de 300 ms) y **NF3** (menos de 50 MB en reposo).
+Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos de 300 ms) y **NF3** (menos de 50 MB en reposo).
 **Punto de decisión:** si no se cumplen, revisar el ADR 0002 (WinForms) **antes** de construir el editor. Corregir el rumbo aquí cuesta poco; después del editor, cuesta mucho.
 
 ## Etapa 2: Editor

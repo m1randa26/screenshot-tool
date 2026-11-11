@@ -1,6 +1,6 @@
 # Spec: Herramienta de capturas para Windows
 
-**Versión:** 1.1 · **Fecha:** 2026-11-10 · **Estado:** ✅ Aprobada · **Fase:** 1 (Especificación)
+**Versión:** 1.2 · **Fecha:** 2026-11-10 · **Estado:** ✅ Aprobada · **Fase:** 1 (Especificación)
 **Basado en:** [`brief.md`](brief.md)
 
 > Esta spec describe **qué hace** el programa, no **con qué se construye**. La tecnología se decide en la Fase 2 (arquitectura).
@@ -125,7 +125,7 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 
 | ID | Requisito |
 |---|---|
-| **NF1** | El modo de selección aparece en **menos de 200 ms** después del atajo. **[P]** |
+| **NF1** | El modo de selección aparece en **menos de 250 ms** después del atajo. **[P]** *(Ajustada desde 200 ms en v1.2, ver §9.)* |
 | **NF2** | El editor aparece en **menos de 300 ms** después de soltar la selección. *(Hace medible "sin espera perceptible", criterio 3.)* **[P]** |
 | **NF3** | En reposo usa muy pocos recursos: **~0 % de CPU** y memoria baja (meta: menos de 50 MB). **[P]** |
 | **NF4** | La captura conserva la **resolución nativa** y se ve correcta con escalado de pantalla (100 %, 125 %, 150 %). |
@@ -170,6 +170,7 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 
 No quedan preguntas abiertas.
 
+- **v1.2 (2026-11-10):** **NF1** se ajusta de 200 ms a **250 ms**, aprobado por el usuario en el hito del esqueleto. Medido con el .exe publicado: 188–239 ms tras optimizar. El resto del tiempo es congelar la pantalla (GDI) y mostrar las ventanas; bajarlo más exigía hilos o una técnica de captura más compleja, a cambio de unos 40 ms casi imperceptibles. Detalle en `checklist-manual.md`, sección "Hito".
 - **v1.1 (2026-11-10):** a partir de la crítica de arquitectura se agregó **R32** (errores) y la verificación del portapapeles en **R21**.
 
 ### Resueltas (2026-11-10)
