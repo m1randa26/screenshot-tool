@@ -17,6 +17,7 @@ public class TrayApp : ApplicationContext
     private readonly GlobalHotkey _hotkey;
     private readonly Logger _logger;
     private readonly ClipboardWriter _clipboard;
+    private readonly FileSaver _saver;
 
     // Una ventana de selección por monitor, creada una vez y reutilizada
     private readonly List<SelectionOverlay> _overlays = new();
@@ -33,6 +34,7 @@ public class TrayApp : ApplicationContext
     {
         _logger = logger;
         _clipboard = new ClipboardWriter(logger);
+        _saver = new FileSaver(FileSaver.DefaultFolder, logger); // en T15–T16, la carpeta configurada
 
         _menu = new ContextMenuStrip();
         _menu.Items.Add("Capturar", null, (sender, e) => Capture());
@@ -161,7 +163,7 @@ public class TrayApp : ApplicationContext
         Bitmap image = capture.Crop(area);
         EndSelection();
 
-        var editor = new EditorForm(image, _clipboard, Notifier); // el editor pasa a ser dueño de la imagen
+        var editor = new EditorForm(image, _clipboard, _saver, Notifier); // el editor pasa a ser dueño de la imagen
         _editor = editor;
         editor.FormClosed += (sender, e) => _editor = null;
         editor.Show();

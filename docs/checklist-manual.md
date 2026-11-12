@@ -193,3 +193,28 @@ Start-Sleep -Seconds 15
 - [x] **Atajo con el editor minimizado:** el editor se restaura (maximizado si lo estaba) y pasa al frente. (R10)
 - [x] El menú **Capturar** con el editor abierto hace lo mismo que el atajo. (R10)
 - [x] Después de cerrar el editor, el atajo vuelve a abrir la selección.
+
+## T14. Guardar en archivo
+
+- [x] Con anotaciones, `Ctrl + S`: aparece la notificación "Guardado como captura_AAAA-MM-DD_HH-MM-SS.png" y el editor se cierra sin preguntar. (R23, R26)
+- [x] El archivo está en `Imágenes\Capturas`, con ese nombre, y al abrirlo tiene las anotaciones. (R23, R24)
+- [x] El portapapeles **no** cambió (lo que había copiado antes sigue ahí). (R23)
+- [x] El archivo es PNG y se ve igual de nítido que la captura. (NF5)
+- [x] Guardar dos capturas muy rápido (en el mismo segundo): la segunda queda con `_2`, ninguna se pisa. (R24)
+- [x] Borrar la carpeta `Capturas` y guardar: se vuelve a crear y el archivo queda ahí. (R25)
+- [x] `Ctrl + S` mientras se escribe un texto: el texto aparece en el archivo.
+- [x] Con el portapapeles bloqueado (bloque de PowerShell de T06), `Ctrl + C`: el aviso ahora sugiere también `Ctrl + S`, y `Ctrl + S` guarda la captura. (R22)
+- [x] *(Opcional; ya lo cubre una prueba automática)* **Carpeta sin permisos:** ejecutar el primer bloque de abajo (quita el permiso de escribir en `Capturas`), `Ctrl + S`: aparece "No hay permiso para escribir…" y el editor sigue abierto. Después, **ejecutar el segundo bloque** para devolver el permiso. (R25)
+
+```powershell
+# Quitar temporalmente el permiso de escribir en Capturas
+$c = Join-Path ([Environment]::GetFolderPath('MyPictures')) 'Capturas'
+New-Item -ItemType Directory -Force $c | Out-Null
+icacls $c /deny "$($env:USERNAME):(WD)"
+```
+
+```powershell
+# Devolver el permiso (¡no olvidar!)
+$c = Join-Path ([Environment]::GetFolderPath('MyPictures')) 'Capturas'
+icacls $c /remove:d $env:USERNAME
+```

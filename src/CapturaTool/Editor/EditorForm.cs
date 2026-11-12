@@ -14,6 +14,7 @@ public class EditorForm : Form
     private readonly ToolStrip _toolStrip;
     private readonly Rectangle _workArea; // área útil del monitor donde se abre
     private readonly ClipboardWriter _clipboard;
+    private readonly FileSaver _saver;
     private readonly Notifier _notifier;
 
     // true después de copiar (o guardar) con éxito: cerrar ya no pierde nada (R27)
@@ -27,10 +28,11 @@ public class EditorForm : Form
     private readonly Dictionary<Color, ToolStripButton> _colorButtons = new();
     private readonly List<Bitmap> _swatches = new(); // cuadritos de color; dueño: este formulario
 
-    public EditorForm(Bitmap image, ClipboardWriter clipboard, Notifier notifier)
+    public EditorForm(Bitmap image, ClipboardWriter clipboard, FileSaver saver, Notifier notifier)
     {
         _document = new AnnotationDocument(image); // el documento pasa a ser dueño de la imagen
         _clipboard = clipboard;
+        _saver = saver;
         _notifier = notifier;
 
         Text = "CapturaTool";
@@ -179,6 +181,11 @@ public class EditorForm : Form
                     CopyToClipboard();
                     return true;
 
+                case Keys.Control | Keys.S:
+                    _canvas.ConfirmText(); // no se pierde lo escrito
+                    SaveToFile();
+                    return true;
+
                 case Keys.Control | Keys.Z:
                 case Keys.Control | Keys.Y:
                     return true; // mientras se escribe no deshacen otras anotaciones; para letras, Retroceso
@@ -199,6 +206,10 @@ public class EditorForm : Form
                 CopyToClipboard();
                 return true;
 
+            case Keys.Control | Keys.S:
+                SaveToFile();
+                return true;
+
             case Keys.Control | Keys.Z: // R18
                 if (_document.Undo())
                 {
@@ -214,6 +225,36 @@ public class EditorForm : Form
                 return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);
+    }
+
+    /// <summary>Guarda la imagen final como PNG en la carpeta de capturas, sin copiarla (R23).</summary>
+    private void SaveToFile()
+    {
+        bool saved;
+        string path;
+        string error;
+        using (Bitmap finalImage = ImageRenderer.Render(_document))
+        {
+            saved = _saver.TrySave(finalImage, out path, out error);
+        }
+
+        if (saved)
+        {
+            // R26: aviso con el nombre del archivo
+            _notifier.Info("CapturaTool", "Guardado como " + Path.GetFileName(path));
+            _outputDone = true;
+            Close();
+        }
+        else
+        {
+            // R25: no se cierra el editor, para no perder la captura
+            MessageBox.Show(
+                this,
+                error + "\n\nLa captura sigue abierta: puedes intentar de nuevo o copiarla con Ctrl + C.",
+                "CapturaTool",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+        }
     }
 
     private void CopyToClipboard()
@@ -238,7 +279,7 @@ public class EditorForm : Form
             // R22: no se cierra el editor, para no perder la captura
             MessageBox.Show(
                 this,
-                "No se pudo copiar al portapapeles porque otro programa lo está usando.\n\nIntenta de nuevo con Ctrl + C.",
+                "No se pudo copiar al portapapeles porque otro programa lo está usando.\n\nIntenta de nuevo con Ctrl + C, o guarda la captura con Ctrl + S.",
                 "CapturaTool",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);

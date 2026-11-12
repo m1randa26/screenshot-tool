@@ -87,7 +87,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
 
 ## Etapa 3: Guardar y configuración
 
-- [ ] **T14. Guardar en archivo**
+- [x] **T14. Guardar en archivo**
   `FileNamer` (con pruebas: formato, duplicados en el mismo segundo) + `FileSaver` (crea la carpeta, maneja errores) + notificación con el nombre del archivo. `Ctrl + S` guarda sin copiar y cierra.
   *Cumple:* R23, R24, R25, R26, NF5
   *Hecho cuando:* pruebas de `FileNamer` pasan; con una carpeta borrada se recrea; con una carpeta sin permisos se avisa y el editor no se cierra.
