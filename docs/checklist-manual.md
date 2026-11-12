@@ -218,3 +218,19 @@ icacls $c /deny "$($env:USERNAME):(WD)"
 $c = Join-Path ([Environment]::GetFolderPath('MyPictures')) 'Capturas'
 icacls $c /remove:d $env:USERNAME
 ```
+
+## T15. Configuración persistente
+
+Archivo: `%APPDATA%\CapturaTool\settings.json`. Para abrirlo: `Win + R` → `%APPDATA%\CapturaTool` → Enter.
+
+- [x] Sin `settings.json`, la app arranca y `Ctrl + S` guarda en `Imágenes\Capturas`. (R29)
+- [x] Crear `settings.json` con otra carpeta (ejemplo abajo), salir con **Salir**, volver a abrir: `Ctrl + S` guarda en esa carpeta. (R31)
+- [x] Escribir texto sin sentido en `settings.json` y volver a abrir la app: arranca normal, guarda en `Imágenes\Capturas` y el log del día tiene "No se pudo leer la configuración". (R31)
+- [x] Al terminar, borrar `settings.json` (o dejarlo con la carpeta que quieras).
+
+```json
+{
+  "saveFolder": "C:\Users\<usuario>\Desktop\PruebaCapturas",
+  "startWithWindows": true
+}
+```

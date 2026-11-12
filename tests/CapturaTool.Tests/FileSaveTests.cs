@@ -205,12 +205,4 @@ public class FileSaveTests : IDisposable
 
         Assert.Contains("No se pudo guardar la captura", File.ReadAllText(_logger.CurrentFilePath));
     }
-
-    [Fact]
-    public void DefaultFolder_IsCapturasInsidePictures()
-    {
-        string pictures = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-
-        Assert.Equal(Path.Combine(pictures, "Capturas"), FileSaver.DefaultFolder);
-    }
 }

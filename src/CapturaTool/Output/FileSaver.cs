@@ -18,11 +18,7 @@ public class FileSaver
         _logger = logger;
     }
 
-    /// <summary>Carpeta inicial: Imágenes\Capturas del usuario (R29).</summary>
-    public static string DefaultFolder =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Capturas");
-
-    /// <summary>Carpeta donde se guardan las capturas.</summary>
+    /// <summary>Carpeta donde se guardan las capturas (viene de la configuración).</summary>
     public string Folder { get; set; }
 
     /// <summary>

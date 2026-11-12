@@ -92,7 +92,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
   *Cumple:* R23, R24, R25, R26, NF5
   *Hecho cuando:* pruebas de `FileNamer` pasan; con una carpeta borrada se recrea; con una carpeta sin permisos se avisa y el editor no se cierra.
 
-- [ ] **T15. Configuración persistente**
+- [x] **T15. Configuración persistente**
   `AppSettings` en JSON: valores por defecto, archivo inexistente o dañado.
   *Cumple:* R29, R31
   *Hecho cuando:* pruebas automáticas de los tres casos.

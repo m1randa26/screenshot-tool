@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using CapturaTool.Capture;
+using CapturaTool.Configuration;
 using CapturaTool.Editor;
 using CapturaTool.Output;
 using CapturaTool.Platform;
@@ -18,6 +19,7 @@ public class TrayApp : ApplicationContext
     private readonly Logger _logger;
     private readonly ClipboardWriter _clipboard;
     private readonly FileSaver _saver;
+    private readonly AppSettings _settings;
 
     // Una ventana de selección por monitor, creada una vez y reutilizada
     private readonly List<SelectionOverlay> _overlays = new();
@@ -34,7 +36,10 @@ public class TrayApp : ApplicationContext
     {
         _logger = logger;
         _clipboard = new ClipboardWriter(logger);
-        _saver = new FileSaver(FileSaver.DefaultFolder, logger); // en T15–T16, la carpeta configurada
+
+        // R31: la configuración guardada; si falta o está dañada, valores por defecto
+        _settings = AppSettings.Load(AppSettings.DefaultFilePath, logger);
+        _saver = new FileSaver(_settings.SaveFolder, logger);
 
         _menu = new ContextMenuStrip();
         _menu.Items.Add("Capturar", null, (sender, e) => Capture());
