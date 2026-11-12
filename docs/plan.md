@@ -97,7 +97,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
   *Cumple:* R29, R31
   *Hecho cuando:* pruebas automáticas de los tres casos.
 
-- [ ] **T16. Ventana de configuración + arranque con Windows**
+- [x] **T16. Ventana de configuración + arranque con Windows**
   `SettingsForm` (carpeta de guardado + casilla de arranque). `AutoStart` en el registro, reescribiendo la ruta en cada inicio. Activar el menú **Configuración**.
   *Cumple:* R1, R28, R30
   *Hecho cuando:* al reiniciar Windows el programa arranca solo; cambiar la carpeta afecta el siguiente guardado; moviendo el .exe, el arranque sigue funcionando.

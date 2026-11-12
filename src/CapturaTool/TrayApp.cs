@@ -19,7 +19,14 @@ public class TrayApp : ApplicationContext
     private readonly Logger _logger;
     private readonly ClipboardWriter _clipboard;
     private readonly FileSaver _saver;
-    private readonly AppSettings _settings;
+    private readonly AutoStart _autoStart;
+    private AppSettings _settings;
+
+    // Ruta del .exe en ejecución: es la que se registra para el arranque con Windows
+    private readonly string _exePath = Environment.ProcessPath ?? Application.ExecutablePath;
+
+    // Ventana de configuración abierta: null cuando no hay ninguna
+    private SettingsForm? _settingsForm;
 
     // Una ventana de selección por monitor, creada una vez y reutilizada
     private readonly List<SelectionOverlay> _overlays = new();
@@ -41,11 +48,14 @@ public class TrayApp : ApplicationContext
         _settings = AppSettings.Load(AppSettings.DefaultFilePath, logger);
         _saver = new FileSaver(_settings.SaveFolder, logger);
 
+        // R1: en cada inicio se reescribe la ruta del .exe, por si se movió de carpeta
+        _autoStart = new AutoStart(AutoStart.WindowsRunKey, logger);
+        _autoStart.TryApply(_settings.StartWithWindows, _exePath);
+
         _menu = new ContextMenuStrip();
         _menu.Items.Add("Capturar", null, (sender, e) => Capture());
 
-        var settingsItem = _menu.Items.Add("Configuración");
-        settingsItem.Enabled = false; // Se activa en T16
+        _menu.Items.Add("Configuración", null, (sender, e) => ShowSettings());
 
 #if DEBUG
         // Solo en desarrollo: sirve para comprobar R32 desde el checklist manual
@@ -199,6 +209,27 @@ public class TrayApp : ApplicationContext
         }
     }
 
+    /// <summary>Abre la ventana de configuración, o la trae al frente si ya está abierta.</summary>
+    private void ShowSettings()
+    {
+        if (_settingsForm != null)
+        {
+            _settingsForm.Activate();
+            return;
+        }
+
+        var form = new SettingsForm(_settings, AppSettings.DefaultFilePath, _autoStart, _exePath, _logger);
+        form.Saved += (sender, updated) =>
+        {
+            _settings = updated;
+            _saver.Folder = updated.SaveFolder; // R28: el siguiente guardado ya usa la carpeta nueva
+        };
+        form.FormClosed += (sender, e) => _settingsForm = null; // al cerrarse, la ventana se libera sola
+        _settingsForm = form;
+        form.Show();
+        form.Activate();
+    }
+
     private void Exit()
     {
         // Ocultar antes de salir para que el ícono no quede "fantasma" en la bandeja
@@ -211,6 +242,7 @@ public class TrayApp : ApplicationContext
         if (disposing)
         {
             EndSelection();
+            _settingsForm?.Dispose();
             foreach (SelectionOverlay overlay in _overlays)
             {
                 overlay.Dispose();

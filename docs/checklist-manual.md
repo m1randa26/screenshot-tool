@@ -234,3 +234,21 @@ Archivo: `%APPDATA%\CapturaTool\settings.json`. Para abrirlo: `Win + R` → `%AP
   "startWithWindows": true
 }
 ```
+
+## T16. Ventana de configuración + arranque con Windows
+
+> Desde que abras esta versión, Windows inicia sola la versión de desarrollo al entrar a tu sesión (la casilla viene marcada). Para comprobar la entrada del registro:
+>
+> ```powershell
+> reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v CapturaTool
+> ```
+
+- [x] Menú del ícono → **Configuración**: se abre la ventana con la carpeta actual y la casilla "Iniciar con Windows" marcada. (R28, R30)
+- [x] Con la ventana abierta, **Configuración** otra vez: no se abre otra, la misma pasa al frente.
+- [x] **Cambiar…** abre el selector de carpetas de Windows; elegir otra carpeta → **Guardar** → `Ctrl + S` guarda en la carpeta nueva. (R28)
+- [x] Con un editor ya abierto, cambiar la carpeta y después `Ctrl + S` en ese editor: guarda en la carpeta nueva. (R28)
+- [x] Salir y volver a abrir la app: la carpeta elegida se conserva. (R31)
+- [x] Cambiar la carpeta y presionar **Cancelar** (o `Esc`): no cambia nada.
+- [x] Desmarcar "Iniciar con Windows" → **Guardar**: `reg query` dice que no existe la entrada; volver a marcarla → la entrada aparece con la ruta del .exe entre comillas. (R30)
+- [x] Con la casilla marcada, **cerrar sesión o reiniciar Windows**: CapturaTool arranca solo (ícono en la bandeja, `Ctrl + Alt + S` funciona). (R1)
+- [x] **Mover el .exe:** salir de la app, copiar la carpeta `src\CapturaTool\bin\Debug\net10.0-windows\win-x64` a otro lugar (por ejemplo el Escritorio) y abrir `CapturaTool.exe` desde la copia: `reg query` muestra la ruta nueva. Después salir, abrir de nuevo la versión normal (vuelve a la ruta original) y borrar la copia. (R1)
