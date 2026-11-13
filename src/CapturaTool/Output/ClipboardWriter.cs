@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using CapturaTool.Platform;
@@ -8,7 +9,7 @@ namespace CapturaTool.Output;
 /// Copia una imagen al portapapeles con reintentos y verifica que quedó ahí (R21, R22).
 /// Solo reporta éxito si la verificación pasa.
 /// </summary>
-public class ClipboardWriter
+public sealed class ClipboardWriter : IDisposable
 {
     private const int MaxAttempts = 10;
     private const int DelayMs = 100;
@@ -17,7 +18,9 @@ public class ClipboardWriter
     public const string PngFormat = "PNG";
 
     private readonly Logger _logger;
-    private Exception? _lastError;
+    private readonly NativeClipboard _clipboard = new();
+    private readonly uint _pngFormat = NativeClipboard.RegisterFormat(PngFormat);
+    private Win32Exception? _lastError;
 
     public ClipboardWriter(Logger logger)
     {
@@ -29,12 +32,12 @@ public class ClipboardWriter
     /// </summary>
     public bool TryCopy(Bitmap image)
     {
-        // MemoryStream no tiene recursos de Windows; igual se libera al terminar
-        using var png = new MemoryStream();
-        DataObject data = CreateDataObject(image, png);
+        // La imagen en dos formatos: mapa de bits estándar (DIB) y PNG
+        byte[] dib = CreateDib(image);
+        byte[] png = CreatePng(image);
         _lastError = null;
 
-        bool ok = Retry.Run(() => TryOnce(data, png), MaxAttempts, () => Thread.Sleep(DelayMs), out int attempts);
+        bool ok = Retry.Run(() => TryOnce(dib, png), MaxAttempts, () => Thread.Sleep(DelayMs), out int attempts);
 
         if (!ok)
         {
@@ -49,39 +52,74 @@ public class ClipboardWriter
     }
 
     /// <summary>
-    /// Prepara la imagen en dos formatos: mapa de bits estándar y PNG.
-    /// El PNG se escribe en <paramref name="png"/>.
+    /// Mapa de bits estándar de Windows (DIB): un encabezado de 40 bytes y los píxeles
+    /// en azul-verde-rojo-alfa, empezando por la fila de <b>abajo</b>.
     /// </summary>
-    public static DataObject CreateDataObject(Bitmap image, MemoryStream png)
+    public static byte[] CreateDib(Bitmap image)
     {
-        var data = new DataObject();
-        data.SetImage(image);
+        int width = image.Width;
+        int height = image.Height;
+        int rowBytes = width * 4;
 
-        image.Save(png, ImageFormat.Png);
-        data.SetData(PngFormat, false, png);
-        return data;
-    }
+        using var stream = new MemoryStream(40 + rowBytes * height);
+        using var writer = new BinaryWriter(stream);
 
-    private bool TryOnce(DataObject data, MemoryStream png)
-    {
+        // BITMAPINFOHEADER
+        writer.Write(40);                // tamaño del encabezado
+        writer.Write(width);
+        writer.Write(height);            // positivo = filas de abajo hacia arriba
+        writer.Write((short)1);          // planos
+        writer.Write((short)32);         // bits por píxel
+        writer.Write(0);                 // sin compresión (BI_RGB)
+        writer.Write(rowBytes * height); // tamaño de los píxeles
+        writer.Write(0);                 // resolución horizontal (no se usa)
+        writer.Write(0);                 // resolución vertical (no se usa)
+        writer.Write(0);                 // colores de paleta
+        writer.Write(0);                 // colores importantes
+
+        BitmapData data = image.LockBits(
+            new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
         try
         {
-            // El PNG se lee desde la posición actual: volver al inicio en cada intento
-            png.Position = 0;
-
-            // copy: true deja la imagen en el portapapeles aunque el editor o el programa se cierren.
-            // retryTimes: 0 porque WinForms reintenta 10 veces por su cuenta si no se le indica;
-            // los reintentos los controla Retry, para que el editor no se congele más de un segundo.
-            Clipboard.SetDataObject(data, copy: true, retryTimes: 0, retryDelay: 0);
-
-            // Verificación: leer de vuelta y comprobar que están los dos formatos
-            return Clipboard.ContainsImage() && Clipboard.ContainsData(PngFormat);
+            var row = new byte[rowBytes];
+            for (int y = height - 1; y >= 0; y--)
+            {
+                Marshal.Copy(data.Scan0 + y * data.Stride, row, 0, rowBytes);
+                writer.Write(row);
+            }
         }
-        catch (ExternalException ex)
+        finally
+        {
+            image.UnlockBits(data);
+        }
+
+        writer.Flush();
+        return stream.ToArray();
+    }
+
+    /// <summary>La imagen codificada como PNG.</summary>
+    public static byte[] CreatePng(Bitmap image)
+    {
+        using var stream = new MemoryStream();
+        image.Save(stream, ImageFormat.Png);
+        return stream.ToArray();
+    }
+
+    private bool TryOnce(byte[] dib, byte[] png)
+    {
+        if (!_clipboard.TrySetImage(dib, png, _pngFormat, out Win32Exception? error))
         {
             // Lo normal: otro programa tiene el portapapeles abierto en este instante
-            _lastError = ex;
+            _lastError = error;
             return false;
         }
+
+        // Verificación: comprobar que el portapapeles tiene los dos formatos
+        return NativeClipboard.HasFormat(NativeClipboard.DibFormat) && NativeClipboard.HasFormat(_pngFormat);
+    }
+
+    public void Dispose()
+    {
+        _clipboard.Dispose();
     }
 }

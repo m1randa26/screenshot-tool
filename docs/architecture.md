@@ -1,6 +1,6 @@
 # Arquitectura: Herramienta de capturas para Windows
 
-**Versión:** 1.0 · **Fecha:** 2026-11-10 · **Estado:** ✅ Aprobada · **Fase:** 2 (Arquitectura)
+**Versión:** 1.1 · **Fecha:** 2026-11-12 · **Estado:** ✅ Aprobada · **Fase:** 2 (Arquitectura)
 **Basado en:** [`spec.md`](spec.md) v1.1 · **Decisiones:** [ADR 0001](adr/0001-tecnologia.md), [ADR 0002](adr/0002-interfaz-winforms.md), [ADR 0003](adr/0003-distribucion.md)
 
 > Este documento explica **cómo está organizado** el programa: sus piezas, qué hace cada una y cómo se comunican. Los requisitos (R*, NF*) remiten a la spec.
@@ -17,7 +17,7 @@
 | Interfaz | WinForms | ADR 0002 |
 | Distribución | Un .exe, dependiente del runtime | ADR 0003 |
 | Pruebas | xUnit **[P]** (elegido por ser el estándar más común, sin comparación formal; fácil de cambiar) | §7 |
-| Compilación | *ReadyToRun* (compilación anticipada) para que la primera apertura del editor no pase de 300 ms | NF2 |
+| Compilación | *ReadyToRun* (compilación anticipada) para que la primera apertura del editor no pase de 350 ms | NF2 |
 | Configuración | Archivo JSON en `%APPDATA%\CapturaTool\` **[P]** | R31 |
 
 ## 2. Vista general
@@ -133,7 +133,7 @@ Estas son las partes de **mayor riesgo**: es donde la herramienta de Windows te 
 
 | Necesidad | Mecanismo | Nota |
 |---|---|---|
-| **Portapapeles (R21, R22)** | `Clipboard.SetDataObject` con reintentos (unos 10 intentos, separados unos 100 ms) | La causa típica de "No se pudo copiar" es que **otro programa tiene el portapapeles abierto** en ese instante. Reintentar lo resuelve casi siempre. Se pone la imagen en **dos formatos** (mapa de bits estándar + PNG) para que Slack y GitHub (navegador) la acepten bien. **[P]** |
+| **Portapapeles (R21, R22)** | Funciones nativas de Windows (`OpenClipboard`, `SetClipboardData`), con reintentos (unos 10 intentos, separados unos 100 ms). *Hasta la v1.0 era `Clipboard.SetDataObject`; ver el historial.* | La causa típica de "No se pudo copiar" es que **otro programa tiene el portapapeles abierto** en ese instante. Reintentar lo resuelve casi siempre. Se pone la imagen en **dos formatos** (mapa de bits estándar DIB + PNG) para que Slack y GitHub (navegador) la acepten bien. **[P]** |
 | **Atajo global (R4)** | API `RegisterHotKey` de Windows | Devuelve error si otro programa ya lo tiene → R5. |
 | **Escalado por monitor (NF4)** | Modo DPI *PerMonitorV2* en la configuración de la app | Sin esto, con escalado al 125–150 % la captura sale borrosa o desfasada. |
 | **Captura (R6)** | Copiar la pantalla completa (todos los monitores) a una imagen en memoria al presionar el atajo | Esto es lo que permite "congelar" menús y tooltips. |
@@ -151,7 +151,7 @@ captura-tool/
 │   └── CapturaTool/            ← la aplicación (WinForms)
 │       ├── Program.cs
 │       ├── TrayApp.cs
-│       ├── Platform/           ← SingleInstance, GlobalHotkey, AutoStart, Notifier, ErrorHandler, Logger
+│       ├── Platform/           ← SingleInstance, GlobalHotkey, AutoStart, Notifier, ErrorHandler, Logger, NativeClipboard
 │       ├── Capture/            ← ScreenCapture, SelectionOverlay
 │       ├── Editor/             ← EditorForm, AnnotationDocument, ViewTransform, Annotations/
 │       ├── Output/             ← ImageRenderer, ClipboardWriter, FileSaver, FileNamer
@@ -194,3 +194,4 @@ Las integraciones con Windows son difíciles de automatizar; por eso la lógica 
 
 - **2026-11-10:** propuestas [P] aprobadas.
 - **2026-11-10 (crítica):** se agregaron ErrorHandler + Logger (R32), ViewTransform, caché de dibujo, regla de liberación de memoria, verificación del portapapeles, reescritura de la ruta de arranque, ReadyToRun y nuevos casos del checklist. La ventaja de WinForms se marcó como *estimada, por medir*.
+- **v1.1 (2026-11-12, T17, aprobado por el usuario):** el portapapeles se escribe con las **funciones nativas de Windows** en vez de `Clipboard.SetDataObject`. Medido en T17: con `SetDataObject` y un `Bitmap`, cada copia dejaba la imagen entera sin liberar (+8 MB y +1 objeto GDI por copia de 1920 × 1080, sin límite), lo que rompía NF3. Con las funciones nativas la memoria queda estable. Se mantienen los reintentos, la verificación y los dos formatos (DIB + PNG). Nuevo componente `NativeClipboard` en `Platform/`. También en T17: la meta de NF2 pasa a 350 ms (spec v1.3).

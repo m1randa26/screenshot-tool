@@ -180,7 +180,13 @@ public class TrayApp : ApplicationContext
 
         var editor = new EditorForm(image, _clipboard, _saver, Notifier); // el editor pasa a ser dueño de la imagen
         _editor = editor;
-        editor.FormClosed += (sender, e) => _editor = null;
+        editor.FormClosed += (sender, e) =>
+        {
+            _editor = null;
+            // NF3: cada captura usa varios MB que .NET guarda "por si acaso" aunque ya no se usen.
+            // Esta limpieza los devuelve a Windows; tarda 1–3 ms y el editor ya está cerrado.
+            GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+        };
         editor.Show();
         editor.Activate();
 
@@ -248,6 +254,7 @@ public class TrayApp : ApplicationContext
                 overlay.Dispose();
             }
             _hotkey.Dispose();
+            _clipboard.Dispose();
             _trayIcon.Dispose();
             _menu.Dispose();
         }
