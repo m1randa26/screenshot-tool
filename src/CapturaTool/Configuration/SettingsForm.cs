@@ -19,7 +19,7 @@ public class SettingsForm : Form
     /// <summary>Se dispara cuando la configuración nueva quedó guardada en el archivo.</summary>
     public event EventHandler<AppSettings>? Saved;
 
-    public SettingsForm(AppSettings current, string settingsPath, AutoStart autoStart, string exePath, Logger logger)
+    public SettingsForm(AppSettings current, string settingsPath, AutoStart autoStart, string exePath, Logger logger, Icon appIcon)
     {
         _settingsPath = settingsPath;
         _autoStart = autoStart;
@@ -29,6 +29,7 @@ public class SettingsForm : Form
         SuspendLayout();
 
         Text = "CapturaTool: Configuración";
+        Icon = appIcon; // prestado: lo libera TrayApp (R33)
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;

@@ -14,6 +14,10 @@ namespace CapturaTool;
 public class TrayApp : ApplicationContext
 {
     private readonly NotifyIcon _trayIcon;
+
+    // Logo (R33). Dueño: TrayApp; las ventanas lo usan prestado
+    private readonly Icon _appIcon;       // con todos los tamaños, para las ventanas
+    private readonly Icon _trayIconImage; // al tamaño chico del sistema, para la bandeja
     private readonly ContextMenuStrip _menu;
     private readonly GlobalHotkey _hotkey;
     private readonly Logger _logger;
@@ -44,6 +48,10 @@ public class TrayApp : ApplicationContext
         _logger = logger;
         _clipboard = new ClipboardWriter(logger);
 
+        // 16 px al 100 %, 24 px al 150 %: así Windows no tiene que achicar uno grande
+        _appIcon = AppIcon.Load();
+        _trayIconImage = AppIcon.Load(SystemInformation.SmallIconSize);
+
         // R31: la configuración guardada; si falta o está dañada, valores por defecto
         _settings = AppSettings.Load(AppSettings.DefaultFilePath, logger);
         _saver = new FileSaver(_settings.SaveFolder, logger);
@@ -69,7 +77,7 @@ public class TrayApp : ApplicationContext
 
         _trayIcon = new NotifyIcon
         {
-            Icon = SystemIcons.Application, // Ícono provisional
+            Icon = _trayIconImage,
             Text = "CapturaTool",
             ContextMenuStrip = _menu,
             Visible = true,
@@ -178,7 +186,7 @@ public class TrayApp : ApplicationContext
         Bitmap image = capture.Crop(area);
         EndSelection();
 
-        var editor = new EditorForm(image, _clipboard, _saver, Notifier); // el editor pasa a ser dueño de la imagen
+        var editor = new EditorForm(image, _clipboard, _saver, Notifier, _appIcon); // el editor pasa a ser dueño de la imagen
         _editor = editor;
         editor.FormClosed += (sender, e) =>
         {
@@ -224,7 +232,7 @@ public class TrayApp : ApplicationContext
             return;
         }
 
-        var form = new SettingsForm(_settings, AppSettings.DefaultFilePath, _autoStart, _exePath, _logger);
+        var form = new SettingsForm(_settings, AppSettings.DefaultFilePath, _autoStart, _exePath, _logger, _appIcon);
         form.Saved += (sender, updated) =>
         {
             _settings = updated;
@@ -257,6 +265,8 @@ public class TrayApp : ApplicationContext
             _clipboard.Dispose();
             _trayIcon.Dispose();
             _menu.Dispose();
+            _trayIconImage.Dispose(); // después del ícono de la bandeja, que lo usaba
+            _appIcon.Dispose();
         }
         base.Dispose(disposing);
     }

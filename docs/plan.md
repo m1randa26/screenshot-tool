@@ -123,7 +123,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
   *Cumple:* R33 (diseño), casos borde de escalado y de tema
   *Hecho cuando:* el usuario aprueba el diseño viendo cada tamaño sobre fondo claro y oscuro, y el `.ico` generado trae los 8 tamaños.
 
-- [ ] **T20. Usar el logo en toda la app**
+- [x] **T20. Usar el logo en toda la app**
   `AppIcon` (cargar el logo desde el `.exe`), `ApplicationIcon` en el `.csproj`, ícono de la bandeja al tamaño chico del sistema, `Form.Icon` en el editor y en Configuración. TrayApp es dueño del ícono y lo libera al salir.
   *Cumple:* R33
   *Hecho cuando:* prueba automática de los tamaños; en el checklist, el logo se ve en la bandeja, la notificación, el editor, Configuración, la barra de tareas y el Explorador, al 100 % y al 150 %, con tema claro y oscuro.

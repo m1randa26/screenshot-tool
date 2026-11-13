@@ -28,7 +28,7 @@ public class EditorForm : Form
     private readonly Dictionary<Color, ToolStripButton> _colorButtons = new();
     private readonly List<Bitmap> _swatches = new(); // cuadritos de color; dueño: este formulario
 
-    public EditorForm(Bitmap image, ClipboardWriter clipboard, FileSaver saver, Notifier notifier)
+    public EditorForm(Bitmap image, ClipboardWriter clipboard, FileSaver saver, Notifier notifier, Icon appIcon)
     {
         _document = new AnnotationDocument(image); // el documento pasa a ser dueño de la imagen
         _clipboard = clipboard;
@@ -36,6 +36,7 @@ public class EditorForm : Form
         _notifier = notifier;
 
         Text = "CapturaTool";
+        Icon = appIcon; // prestado: lo libera TrayApp (R33)
         StartPosition = FormStartPosition.Manual;
         MinimumSize = new Size(400, 300);
 

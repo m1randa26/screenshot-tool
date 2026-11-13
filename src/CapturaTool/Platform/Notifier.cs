@@ -14,8 +14,12 @@ public class Notifier
         _trayIcon = trayIcon;
     }
 
+    // Sin ícono propio: Windows 11 muestra el logo en el encabezado del aviso (R33).
+    // Con ToolTipIcon.Info ponía una "i" genérica grande en el cuerpo.
     public void Info(string title, string text) =>
-        _trayIcon.ShowBalloonTip(DurationMs, title, text, ToolTipIcon.Info);
+        _trayIcon.ShowBalloonTip(DurationMs, title, text, ToolTipIcon.None);
+
+    // Los errores mantienen la X roja, para que se distingan de un vistazo
 
     public void Error(string title, string text) =>
         _trayIcon.ShowBalloonTip(DurationMs, title, text, ToolTipIcon.Error);

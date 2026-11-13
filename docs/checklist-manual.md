@@ -296,3 +296,17 @@ Archivo: `%APPDATA%\CapturaTool\settings.json`. Para abrirlo: `Win + R` → `%AP
 - [x] Con un monitor al **150 %**: captura nítida y editor legible. (NF4)
 - [x] Menú "Provocar error (prueba)": aparece el aviso y el error queda en el log. (R32)
 - [x] Después de varias capturas, el Administrador de tareas muestra CapturaTool por debajo de 50 MB. (NF3)
+
+## T20. Logo en toda la app
+
+> Si el Explorador sigue mostrando el ícono viejo del `.exe`, es su caché de íconos. Se refresca cerrando sesión o reiniciando; también al copiar el `.exe` a otra carpeta.
+
+- [x] **Bandeja:** el ícono de CapturaTool es el logo (azul, esquinas blancas, flecha amarilla) y se reconoce sin pasar el mouse por encima. (R33, criterio 1 del Ciclo 2)
+- [x] **Notificación:** al copiar o guardar, el aviso ya no muestra la "i" azul en el cuerpo. Los avisos de error mantienen la X roja.
+  > El ícono del **encabezado** del aviso lo guarda Windows la primera vez que un `.exe` (según su ruta) muestra un aviso, y no lo actualiza después. La versión de desarrollo (`bin\Debug`) avisó antes de tener logo, así que ahí sigue el ícono genérico. Comprobado con un programa de prueba: el primer aviso fija el ícono; tener el ícono en la bandeja sin avisar no lo fija. El .exe publicado nunca mostró un aviso, así que el logo en el encabezado se comprueba en **T21**.
+- [x] **Editor:** el logo aparece en la barra de título y en su botón de la barra de tareas.
+- [x] **Configuración:** el logo aparece en la barra de título.
+- [x] **Alt + Tab** con el editor abierto: se ve el logo.
+- [x] **Explorador:** `CapturaTool.exe` muestra el logo en vista de íconos medianos y grandes.
+- [x] Todo lo anterior al **150 %** de escalado: el logo se ve nítido, sin bordes borrosos. (Criterio 2 del Ciclo 2)
+- [x] Con la barra de tareas en **tema claro** y en **tema oscuro** (Configuración → Personalización → Colores): el logo se distingue en los dos. (Criterio 3 del Ciclo 2)

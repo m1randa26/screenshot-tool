@@ -20,4 +20,12 @@
     <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
 
+  <!-- Logo (R33): ícono del .exe (Explorador, barra de tareas) y copia dentro del programa para cargarlo desde el código -->
+  <PropertyGroup>
+    <ApplicationIcon>Resources\CapturaTool.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\CapturaTool.ico" LogicalName="CapturaTool.ico" />
+  </ItemGroup>
+
 </Project>
