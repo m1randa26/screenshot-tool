@@ -4,7 +4,7 @@
 
 ## Instalación
 
-- **Ejecutable:** `%LOCALAPPDATA%\Programs\CapturaTool\CapturaTool.exe` (publicado en Release, ReadyToRun, versión del commit `286c9f8`).
+- **Ejecutable:** `%LOCALAPPDATA%\Programs\CapturaTool\CapturaTool.exe` (publicado en Release, ReadyToRun). Versión inicial: commit `286c9f8`. **Desde el 2026-11-12, versión con logo: commit `941400b`** (Ciclo 2, T21); el programa es el mismo, solo cambia el ícono, así que la semana sigue corriendo.
 - **Arranque con Windows:** entrada `CapturaTool` en `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, apuntando a ese .exe. Para comprobarla:
 
   ```powershell

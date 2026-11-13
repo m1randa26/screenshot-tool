@@ -310,3 +310,15 @@ Archivo: `%APPDATA%\CapturaTool\settings.json`. Para abrirlo: `Win + R` → `%AP
 - [x] **Explorador:** `CapturaTool.exe` muestra el logo en vista de íconos medianos y grandes.
 - [x] Todo lo anterior al **150 %** de escalado: el logo se ve nítido, sin bordes borrosos. (Criterio 2 del Ciclo 2)
 - [x] Con la barra de tareas en **tema claro** y en **tema oscuro** (Configuración → Personalización → Colores): el logo se distingue en los dos. (Criterio 3 del Ciclo 2)
+
+## T21. Versión publicada con logo
+
+> Publicado en `%LOCALAPPDATA%\Programs\CapturaTool` (commit `941400b`) y abierto a través del Explorador. El arranque con Windows apunta a ese `.exe`.
+
+- [x] **Primer aviso** (una captura y `Ctrl + C`): el encabezado muestra **el logo** junto a "CapturaTool". (Pendiente de T20)
+- [x] La bandeja muestra el logo y se reconoce sin pasar el mouse por encima. (Criterio 1 del Ciclo 2)
+- [x] El editor muestra el logo en su barra de título y en la barra de tareas.
+- [x] En `%LOCALAPPDATA%\Programs\CapturaTool`, `CapturaTool.exe` muestra el logo en el Explorador (si sale el ícono viejo, es la caché; ver T20).
+- [x] Al **150 %**: el logo se ve nítido en la bandeja y en la barra de tareas. (Criterio 2 del Ciclo 2)
+- [x] Barra de tareas en **tema claro** y en **tema oscuro**: el logo se distingue en los dos. (Criterio 3 del Ciclo 2)
+- [x] Después de **cerrar sesión o reiniciar**, CapturaTool arranca solo, con el logo en la bandeja, y es el publicado (no la versión de desarrollo). (R1)

@@ -128,7 +128,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
   *Cumple:* R33
   *Hecho cuando:* prueba automática de los tamaños; en el checklist, el logo se ve en la bandeja, la notificación, el editor, Configuración, la barra de tareas y el Explorador, al 100 % y al 150 %, con tema claro y oscuro.
 
-- [ ] **T21. Publicar la versión con logo**
+- [x] **T21. Publicar la versión con logo**
   Volver a publicar en `%LOCALAPPDATA%\Programs\CapturaTool` y comprobar que el arranque con Windows sigue apuntando ahí.
   *Cumple:* R33 en el .exe publicado; criterios del Ciclo 2 del brief
   *Hecho cuando:* el .exe publicado muestra el logo en todos los lugares y los tres criterios del Ciclo 2 se cumplen.
