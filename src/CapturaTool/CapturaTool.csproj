@@ -20,12 +20,25 @@
     <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
 
-  <!-- Logo (R33): ícono del .exe (Explorador, barra de tareas) y copia dentro del programa para cargarlo desde el código -->
+  <!-- Logo (R33): ícono del .exe (Explorador, barra de tareas) y copia dentro del programa para cargarlo desde el código.
+       Se guardan los dos logos (estable e Insider) para que las pruebas puedan revisar ambos. -->
   <PropertyGroup>
     <ApplicationIcon>Resources\CapturaTool.ico</ApplicationIcon>
+    <Product>CapturaTool</Product>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\CapturaTool.ico" LogicalName="CapturaTool.ico" />
+    <EmbeddedResource Include="Resources\CapturaTool.Insider.ico" LogicalName="CapturaTool.Insider.ico" />
   </ItemGroup>
+
+  <!-- Versión Insider (R34, ADR 0004): dotnet publish ... -p:Channel=Insider
+       Cambia solo la identidad: nombre del .exe, nombre del producto (lo muestran los avisos), logo y la constante INSIDER. -->
+  <PropertyGroup Condition="'$(Channel)' == 'Insider'">
+    <AssemblyName>CapturaTool.Insider</AssemblyName>
+    <Product>CapturaTool Insider</Product>
+    <AssemblyTitle>CapturaTool Insider</AssemblyTitle>
+    <ApplicationIcon>Resources\CapturaTool.Insider.ico</ApplicationIcon>
+    <DefineConstants>$(DefineConstants);INSIDER</DefineConstants>
+  </PropertyGroup>
 
 </Project>

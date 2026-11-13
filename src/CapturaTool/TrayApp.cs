@@ -57,7 +57,7 @@ public class TrayApp : ApplicationContext
         _saver = new FileSaver(_settings.SaveFolder, logger);
 
         // R1: en cada inicio se reescribe la ruta del .exe, por si se movió de carpeta
-        _autoStart = new AutoStart(AutoStart.WindowsRunKey, logger);
+        _autoStart = new AutoStart(AutoStart.WindowsRunKey, AppIdentity.Current.AutoStartValueName, logger);
         _autoStart.TryApply(_settings.StartWithWindows, _exePath);
 
         _menu = new ContextMenuStrip();
@@ -78,7 +78,7 @@ public class TrayApp : ApplicationContext
         _trayIcon = new NotifyIcon
         {
             Icon = _trayIconImage,
-            Text = "CapturaTool",
+            Text = AppIdentity.Current.DisplayName,
             ContextMenuStrip = _menu,
             Visible = true,
         };
@@ -88,13 +88,15 @@ public class TrayApp : ApplicationContext
         // El atajo y el menú Capturar hacen lo mismo (R4)
         _hotkey = new GlobalHotkey();
         _hotkey.Pressed += (sender, e) => Capture();
-        if (!_hotkey.Register(KeyModifiers.Control | KeyModifiers.Alt, Keys.S))
+        // Ctrl + Alt + S; en la Insider, Ctrl + Alt + Shift + S (R34)
+        if (!_hotkey.Register(AppIdentity.Current.HotkeyModifiers, Keys.S))
         {
             // R5: avisar y dejar el menú Capturar como alternativa
-            _logger.Write("No se pudo registrar el atajo Ctrl + Alt + S (otro programa lo usa)");
+            string hotkey = AppIdentity.Current.DescribeHotkey(Keys.S);
+            _logger.Write($"No se pudo registrar el atajo {hotkey} (otro programa lo usa)");
             Notifier.Error(
-                "CapturaTool: atajo no disponible",
-                "No se pudo activar Ctrl + Alt + S porque otro programa lo usa. Puedes capturar desde el menú del ícono.");
+                $"{AppIdentity.Current.DisplayName}: atajo no disponible",
+                $"No se pudo activar {hotkey} porque otro programa lo usa. Puedes capturar desde el menú del ícono.");
         }
 
         // Crear las ventanas de selección ahora, para que la primera captura sea rápida (NF1)

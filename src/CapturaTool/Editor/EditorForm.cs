@@ -35,7 +35,7 @@ public class EditorForm : Form
         _saver = saver;
         _notifier = notifier;
 
-        Text = "CapturaTool";
+        Text = AppIdentity.Current.DisplayName;
         Icon = appIcon; // prestado: lo libera TrayApp (R33)
         StartPosition = FormStartPosition.Manual;
         MinimumSize = new Size(400, 300);
@@ -246,7 +246,7 @@ public class EditorForm : Form
         if (saved)
         {
             // R26: aviso con el nombre del archivo
-            _notifier.Info("CapturaTool", "Guardado como " + Path.GetFileName(path));
+            _notifier.Info(AppIdentity.Current.DisplayName, "Guardado como " + Path.GetFileName(path));
             _outputDone = true;
             Close();
         }
@@ -256,7 +256,7 @@ public class EditorForm : Form
             MessageBox.Show(
                 this,
                 error + "\n\nLa captura sigue abierta: puedes intentar de nuevo o copiarla con Ctrl + C.",
-                "CapturaTool",
+                AppIdentity.Current.DisplayName,
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
         }
@@ -275,7 +275,7 @@ public class EditorForm : Form
         if (copied)
         {
             // R21: el aviso aparece solo si la copia se verificó
-            _notifier.Info("CapturaTool", "Copiado al portapapeles");
+            _notifier.Info(AppIdentity.Current.DisplayName, "Copiado al portapapeles");
             _outputDone = true;
             Close();
         }
@@ -285,7 +285,7 @@ public class EditorForm : Form
             MessageBox.Show(
                 this,
                 "No se pudo copiar al portapapeles porque otro programa lo está usando.\n\nIntenta de nuevo con Ctrl + C, o guarda la captura con Ctrl + S.",
-                "CapturaTool",
+                AppIdentity.Current.DisplayName,
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
         }
@@ -328,7 +328,7 @@ public class EditorForm : Form
             DialogResult answer = MessageBox.Show(
                 this,
                 "¿Descartar la captura?\n\nSe perderán las anotaciones.",
-                "CapturaTool",
+                AppIdentity.Current.DisplayName,
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question,
                 MessageBoxDefaultButton.Button2);

@@ -46,7 +46,7 @@ public class ErrorHandler
 
         try
         {
-            Notifier?.Error("CapturaTool: ocurrió un error", "El detalle quedó guardado en el log.");
+            Notifier?.Error($"{AppIdentity.Current.DisplayName}: ocurrió un error", "El detalle quedó guardado en el log.");
         }
         catch
         {

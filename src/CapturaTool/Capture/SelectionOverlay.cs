@@ -1,3 +1,5 @@
+using CapturaTool.Platform;
+
 namespace CapturaTool.Capture;
 
 /// <summary>
@@ -27,7 +29,7 @@ public class SelectionOverlay : Form
     {
         MonitorBounds = monitorBounds;
 
-        Text = "CapturaTool: selección";
+        Text = AppIdentity.Current.DisplayName + ": selección";
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.Manual;
         ShowInTaskbar = false;

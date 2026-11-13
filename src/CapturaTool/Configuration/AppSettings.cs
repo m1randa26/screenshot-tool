@@ -23,12 +23,8 @@ public class AppSettings
     public static string DefaultSaveFolder =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Capturas");
 
-    /// <summary>%APPDATA%\CapturaTool\settings.json</summary>
-    public static string DefaultFilePath =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "CapturaTool",
-            "settings.json");
+    /// <summary>%APPDATA%\CapturaTool\settings.json (en la Insider, %APPDATA%\CapturaTool Insider\settings.json)</summary>
+    public static string DefaultFilePath => Path.Combine(AppIdentity.Current.DataFolder, "settings.json");
 
     /// <summary>Carpeta donde se guardan las capturas (R28, R29).</summary>
     public string SaveFolder { get; set; } = DefaultSaveFolder;

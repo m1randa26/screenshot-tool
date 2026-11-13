@@ -322,3 +322,16 @@ Archivo: `%APPDATA%\CapturaTool\settings.json`. Para abrirlo: `Win + R` → `%AP
 - [x] Al **150 %**: el logo se ve nítido en la bandeja y en la barra de tareas. (Criterio 2 del Ciclo 2)
 - [x] Barra de tareas en **tema claro** y en **tema oscuro**: el logo se distingue en los dos. (Criterio 3 del Ciclo 2)
 - [x] Después de **cerrar sesión o reiniciar**, CapturaTool arranca solo, con el logo en la bandeja, y es el publicado (no la versión de desarrollo). (R1)
+
+## T22. Versión Insider (rama `insiders`)
+
+> Publicada con `dotnet publish src/CapturaTool -c Release -p:Channel=Insider -o "%LOCALAPPDATA%\Programs\CapturaTool Insider"` y abierta a través del Explorador, con la estable también abierta.
+
+- [x] En la bandeja hay **dos íconos**: el azul (estable) y el morado (Insider). Al pasar el mouse dicen "CapturaTool" y "CapturaTool Insider". (R34)
+- [x] `Ctrl + Alt + S` abre la selección de la **estable** y `Ctrl + Alt + Shift + S`, la de la **Insider**. Ninguna avisa "atajo no disponible".
+- [x] El editor de cada una dice su nombre en el título, tiene su logo y su aviso de "Copiado" dice "CapturaTool" o "CapturaTool Insider". El primer aviso de la Insider muestra el logo morado en el encabezado.
+- [x] Cambiar la carpeta de guardado en la Configuración de la Insider **no** cambia la de la estable, y al revés.
+- [x] "Salir" de la Insider no cierra la estable, y al revés.
+- [x] Abrir la Insider dos veces no crea un segundo ícono morado (instancia única propia).
+- [x] En `%LOCALAPPDATA%\Programs\CapturaTool Insider`, `CapturaTool.Insider.exe` muestra el logo morado en el Explorador.
+- [x] Después de **cerrar sesión o reiniciar**, arrancan **las dos**, cada una con su ícono.

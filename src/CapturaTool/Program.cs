@@ -8,7 +8,7 @@ static class Program
     static void Main()
     {
         // Si el programa ya está abierto, esta copia termina sin hacer nada (R3)
-        using var singleInstance = new SingleInstance("Local\\CapturaTool_SingleInstance");
+        using var singleInstance = new SingleInstance(AppIdentity.Current.MutexName);
         if (!singleInstance.IsFirst)
         {
             return;
@@ -35,8 +35,8 @@ static class Program
             // Error al arrancar: todavía no hay ícono en la bandeja, así que se avisa con un mensaje
             logger.Write("Error al arrancar", ex);
             MessageBox.Show(
-                "CapturaTool no pudo iniciar. El detalle quedó guardado en:\n" + logger.CurrentFilePath,
-                "CapturaTool",
+                AppIdentity.Current.DisplayName + " no pudo iniciar. El detalle quedó guardado en:\n" + logger.CurrentFilePath,
+                AppIdentity.Current.DisplayName,
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }

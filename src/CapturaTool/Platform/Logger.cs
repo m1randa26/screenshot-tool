@@ -15,12 +15,8 @@ public class Logger
         _folder = folder;
     }
 
-    /// <summary>%APPDATA%\CapturaTool\logs</summary>
-    public static string DefaultFolder =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "CapturaTool",
-            "logs");
+    /// <summary>%APPDATA%\CapturaTool\logs (en la Insider, %APPDATA%\CapturaTool Insider\logs)</summary>
+    public static string DefaultFolder => Path.Combine(AppIdentity.Current.DataFolder, "logs");
 
     /// <summary>Archivo del día de hoy, por ejemplo CapturaTool_2026-11-10.log</summary>
     public string CurrentFilePath =>

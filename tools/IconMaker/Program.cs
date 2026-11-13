@@ -2,32 +2,67 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using IconMaker;
 
-// Genera el logo de CapturaTool (R33): el .ico de la app y una vista previa para revisarlo.
+// Genera los logos de CapturaTool (R33, R34): el .ico de la estable y el de la Insider,
+// cada uno con una vista previa para revisarlo.
 // Uso, desde la carpeta del repo:  dotnet run --project tools/IconMaker
+// Para comparar los candidatos de la Insider sin escribir ningún .ico:
+//   dotnet run --project tools/IconMaker -- --candidatos <carpeta>
 
 int[] sizes = { 16, 20, 24, 32, 40, 48, 64, 256 };
 
-string repo = FindRepoRoot();
-string icoPath = Path.Combine(repo, "src", "CapturaTool", "Resources", "CapturaTool.ico");
-string previewPath = Path.Combine(repo, "tools", "IconMaker", "preview.png");
-
-List<Bitmap> images = sizes.Select(LogoPainter.Paint).ToList();
-try
+if (args.Length == 2 && args[0] == "--candidatos")
 {
-    Directory.CreateDirectory(Path.GetDirectoryName(icoPath)!);
-    IcoWriter.Write(icoPath, images);
-    Console.WriteLine($"Ícono: {icoPath}");
-    Console.WriteLine($"Tamaños: {string.Join(", ", sizes)}");
-
-    using Bitmap preview = CreatePreview(images);
-    preview.Save(previewPath, ImageFormat.Png);
-    Console.WriteLine($"Vista previa: {previewPath}");
+    SavePreview(LogoStyle.InsiderPurple, Path.Combine(args[1], "candidato-morado.png"));
+    SavePreview(LogoStyle.InsiderBand, Path.Combine(args[1], "candidato-franja.png"));
+    return;
 }
-finally
+
+string repo = FindRepoRoot();
+string resources = Path.Combine(repo, "src", "CapturaTool", "Resources");
+string tool = Path.Combine(repo, "tools", "IconMaker");
+
+Generate(LogoStyle.Stable, Path.Combine(resources, "CapturaTool.ico"), Path.Combine(tool, "preview.png"));
+Generate(LogoStyle.Insider, Path.Combine(resources, "CapturaTool.Insider.ico"), Path.Combine(tool, "preview-insider.png"));
+
+// Escribe el .ico de un estilo y su vista previa
+void Generate(LogoStyle style, string icoPath, string previewPath)
 {
-    foreach (Bitmap image in images)
+    List<Bitmap> images = sizes.Select(size => LogoPainter.Paint(size, style)).ToList();
+    try
     {
-        image.Dispose();
+        Directory.CreateDirectory(Path.GetDirectoryName(icoPath)!);
+        IcoWriter.Write(icoPath, images);
+        Console.WriteLine($"Ícono: {icoPath} ({string.Join(", ", sizes)})");
+
+        using Bitmap preview = CreatePreview(images);
+        preview.Save(previewPath, ImageFormat.Png);
+        Console.WriteLine($"Vista previa: {previewPath}");
+    }
+    finally
+    {
+        foreach (Bitmap image in images)
+        {
+            image.Dispose();
+        }
+    }
+}
+
+// Solo la vista previa de un estilo (para comparar candidatos)
+void SavePreview(LogoStyle style, string previewPath)
+{
+    List<Bitmap> images = sizes.Select(size => LogoPainter.Paint(size, style)).ToList();
+    try
+    {
+        using Bitmap preview = CreatePreview(images);
+        preview.Save(previewPath, ImageFormat.Png);
+        Console.WriteLine($"Vista previa: {previewPath}");
+    }
+    finally
+    {
+        foreach (Bitmap image in images)
+        {
+            image.Dispose();
+        }
     }
 }
 

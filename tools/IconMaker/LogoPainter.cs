@@ -9,7 +9,6 @@ namespace IconMaker;
 /// </summary>
 public static class LogoPainter
 {
-    private static readonly Color Blue = Color.FromArgb(30, 110, 230);    // azul de la paleta del editor
     private static readonly Color Yellow = Color.FromArgb(255, 210, 30);  // flecha
 
     // Medidas en la cuadrícula de 32 × 32
@@ -18,7 +17,11 @@ public static class LogoPainter
     private const float CornerThickness = 2.6f;  // grosor de las esquinas
     private const float BackgroundRadius = 6f;   // redondeo del fondo
 
-    public static Bitmap Paint(int size)
+    /// <summary>Dibuja el logo de la versión estable.</summary>
+    public static Bitmap Paint(int size) => Paint(size, LogoStyle.Stable);
+
+    /// <summary>Dibuja el logo con un estilo (estable o Insider, R34).</summary>
+    public static Bitmap Paint(int size, LogoStyle style)
     {
         var bitmap = new Bitmap(size, size, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
         using Graphics g = Graphics.FromImage(bitmap);
@@ -28,22 +31,34 @@ public static class LogoPainter
 
         float scale = size / 32f;
 
-        DrawBackground(g, size, scale);
+        DrawBackground(g, size, scale, style);
         DrawCorners(g, size, scale);
         DrawArrow(g, size, scale);
 
         return bitmap;
     }
 
-    private static void DrawBackground(Graphics g, int size, float scale)
+    private static void DrawBackground(Graphics g, int size, float scale, LogoStyle style)
     {
         int margin = (int)Math.Floor(scale); // 0 px a 16, 1 px a 32, 8 px a 256
         float radius = BackgroundRadius * scale;
         var area = new RectangleF(margin, margin, size - 2 * margin, size - 2 * margin);
 
         using GraphicsPath path = RoundedRectangle(area, radius);
-        using var brush = new SolidBrush(Blue);
+        using var brush = new SolidBrush(style.Background);
         g.FillPath(brush, path);
+
+        if (style.Band is Color bandColor)
+        {
+            // Franja abajo, recortada con la forma redondeada del fondo; nunca menos de 2 px
+            int bandHeight = Math.Max(2, (int)Math.Round(3f * scale, MidpointRounding.AwayFromZero));
+            Region oldClip = g.Clip;
+            g.SetClip(path);
+            using var band = new SolidBrush(bandColor);
+            g.FillRectangle(band, 0, size - margin - bandHeight, size, bandHeight + margin);
+            g.Clip = oldClip;
+            oldClip.Dispose();
+        }
     }
 
     private static void DrawCorners(Graphics g, int size, float scale)

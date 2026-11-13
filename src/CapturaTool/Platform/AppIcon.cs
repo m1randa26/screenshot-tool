@@ -6,9 +6,6 @@ namespace CapturaTool.Platform;
 /// </summary>
 public static class AppIcon
 {
-    /// <summary>Nombre del logo dentro del programa (ver EmbeddedResource en el .csproj).</summary>
-    public const string ResourceName = "CapturaTool.ico";
-
     /// <summary>El logo con todos sus tamaños: las ventanas eligen el que necesitan.</summary>
     public static Icon Load()
     {
@@ -23,11 +20,14 @@ public static class AppIcon
         return new Icon(stream, size);
     }
 
-    /// <summary>Abre el archivo .ico guardado dentro del programa.</summary>
-    public static Stream OpenResource()
+    /// <summary>Abre el logo de esta versión (estable o Insider, R34) guardado dentro del programa.</summary>
+    public static Stream OpenResource() => OpenResource(AppIdentity.Current.IconResourceName);
+
+    /// <summary>Abre un logo guardado dentro del programa, por su nombre.</summary>
+    public static Stream OpenResource(string resourceName)
     {
-        return typeof(AppIcon).Assembly.GetManifestResourceStream(ResourceName)
-            ?? throw new InvalidOperationException($"No se encontró el logo {ResourceName} dentro del programa.");
+        return typeof(AppIcon).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"No se encontró el logo {resourceName} dentro del programa.");
     }
 
     /// <summary>

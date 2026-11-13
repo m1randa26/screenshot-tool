@@ -137,7 +137,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
 
 > Todo se hace en la rama `insiders` y se prueba con la versión Insider instalada junto a la estable. Nada pasa a `main` hasta T27 (ADR 0004).
 
-- [ ] **T22. Versión Insider**
+- [x] **T22. Versión Insider**
   `AppIdentity` y la opción `-p:Channel=Insider`: nombre, `.exe`, atajos con `Shift`, carpeta de datos, mutex y entrada de arranque propios. Logo Insider generado con `tools/IconMaker`. Publicar en `%LOCALAPPDATA%\Programs\CapturaTool Insider`.
   *Cumple:* R34
   *Hecho cuando:* prueba automática de que la estable y la Insider no comparten ningún dato; las dos instaladas y abiertas a la vez, cada una con su ícono, su atajo, su configuración y su arranque con Windows.

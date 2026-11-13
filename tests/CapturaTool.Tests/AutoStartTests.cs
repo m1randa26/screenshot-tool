@@ -14,7 +14,7 @@ public class AutoStartTests : IDisposable
 
     public AutoStartTests()
     {
-        _autoStart = new AutoStart(_keyPath, new Logger(_logFolder));
+        _autoStart = new AutoStart(_keyPath, "CapturaTool", new Logger(_logFolder));
     }
 
     public void Dispose()
@@ -30,7 +30,7 @@ public class AutoStartTests : IDisposable
     public void RealKey_IsTheWindowsRunKey()
     {
         Assert.Equal(@"Software\Microsoft\Windows\CurrentVersion\Run", AutoStart.WindowsRunKey);
-        Assert.Equal("CapturaTool", AutoStart.ValueName);
+        Assert.Equal("CapturaTool", AppIdentity.Stable.AutoStartValueName);
     }
 
     [Fact]
@@ -82,5 +82,19 @@ public class AutoStartTests : IDisposable
     public void ReadCommand_KeyMissing_GivesNull()
     {
         Assert.Null(_autoStart.ReadCommand());
+    }
+
+    [Fact]
+    public void StableAndInsider_UseDifferentEntries_AndDoNotTouchEachOther()
+    {
+        var stable = new AutoStart(_keyPath, AppIdentity.Stable.AutoStartValueName, new Logger(_logFolder));
+        var insider = new AutoStart(_keyPath, AppIdentity.Insider.AutoStartValueName, new Logger(_logFolder));
+
+        stable.TryApply(true, @"C:\Estable\CapturaTool.exe");
+        insider.TryApply(true, @"C:\Insider\CapturaTool.Insider.exe");
+        insider.TryApply(false, @"C:\Insider\CapturaTool.Insider.exe");
+
+        Assert.Equal("\"C:\\Estable\\CapturaTool.exe\"", stable.ReadCommand());
+        Assert.Null(insider.ReadCommand());
     }
 }

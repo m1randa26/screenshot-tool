@@ -12,16 +12,16 @@ public class AutoStart
     /// <summary>Clave del registro que Windows lee al iniciar sesión.</summary>
     public const string WindowsRunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
 
-    /// <summary>Nombre de la entrada dentro de la clave.</summary>
-    public const string ValueName = "CapturaTool";
-
     private readonly string _keyPath;
+    private readonly string _valueName;
     private readonly Logger _logger;
 
     /// <param name="keyPath">Clave dentro de HKEY_CURRENT_USER (las pruebas usan una propia).</param>
-    public AutoStart(string keyPath, Logger logger)
+    /// <param name="valueName">Nombre de la entrada: distinto en la estable y en la Insider (R34).</param>
+    public AutoStart(string keyPath, string valueName, Logger logger)
     {
         _keyPath = keyPath;
+        _valueName = valueName;
         _logger = logger;
     }
 
@@ -39,11 +39,11 @@ public class AutoStart
             using RegistryKey key = Registry.CurrentUser.CreateSubKey(_keyPath);
             if (enabled)
             {
-                key.SetValue(ValueName, BuildCommand(exePath), RegistryValueKind.String);
+                key.SetValue(_valueName, BuildCommand(exePath), RegistryValueKind.String);
             }
             else
             {
-                key.DeleteValue(ValueName, throwOnMissingValue: false);
+                key.DeleteValue(_valueName, throwOnMissingValue: false);
             }
             return true;
         }
@@ -58,6 +58,6 @@ public class AutoStart
     public string? ReadCommand()
     {
         using RegistryKey? key = Registry.CurrentUser.OpenSubKey(_keyPath);
-        return key?.GetValue(ValueName) as string;
+        return key?.GetValue(_valueName) as string;
     }
 }

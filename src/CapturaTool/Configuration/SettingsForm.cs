@@ -28,7 +28,7 @@ public class SettingsForm : Form
 
         SuspendLayout();
 
-        Text = "CapturaTool: Configuración";
+        Text = AppIdentity.Current.DisplayName + ": Configuración";
         Icon = appIcon; // prestado: lo libera TrayApp (R33)
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -140,7 +140,7 @@ public class SettingsForm : Form
         if (!updated.TrySave(_settingsPath, _logger, out string error))
         {
             // La ventana sigue abierta para intentar de nuevo
-            MessageBox.Show(this, error, "CapturaTool", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, error, AppIdentity.Current.DisplayName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
@@ -151,7 +151,7 @@ public class SettingsForm : Form
             MessageBox.Show(
                 this,
                 "La configuración se guardó, pero no se pudo cambiar el arranque con Windows.\n\nEl detalle quedó en el log.",
-                "CapturaTool",
+                AppIdentity.Current.DisplayName,
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
         }
