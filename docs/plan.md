@@ -1,7 +1,7 @@
 # Plan de implementación
 
-**Versión:** 1.0 · **Fecha:** 2026-11-10 · **Estado:** ✅ Aprobado · **Fase:** 4 (Plan)
-**Basado en:** [`spec.md`](spec.md) v1.1 · [`architecture.md`](architecture.md) v1.0
+**Versión:** 1.1 · **Fecha:** 2026-11-12 · **Estado:** ✅ Aprobado · **Fase:** 4 (Plan)
+**Basado en:** [`spec.md`](spec.md) v1.4 · [`architecture.md`](architecture.md) v1.2
 
 > **Cómo se usa:** se toma **una tarea a la vez**, en orden. Cada tarea indica qué requisitos cumple y cuándo se considera terminada. Al terminarla, se marca `[x]` y se hace commit (con aprobación).
 >
@@ -114,6 +114,25 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
   *Cumple:* criterio 5 del brief
   *Hecho cuando:* una semana completa sin volver a la herramienta de Windows. 🎯
 
+## Etapa 5: Ciclo 2, identidad visual
+
+> Se puede avanzar mientras T18 sigue abierta: T21 publica el mismo programa con el logo nuevo, sin reiniciar la semana de prueba.
+
+- [ ] **T19. Diseño del logo**
+  Proponer 2 o 3 diseños simples y elegir uno con el usuario. `tools/IconMaker` dibuja el elegido en cada tamaño (16, 20, 24, 32, 40, 48, 64 y 256 px) y genera `src/CapturaTool/Resources/CapturaTool.ico`.
+  *Cumple:* R33 (diseño), casos borde de escalado y de tema
+  *Hecho cuando:* el usuario aprueba el diseño viendo cada tamaño sobre fondo claro y oscuro, y el `.ico` generado trae los 8 tamaños.
+
+- [ ] **T20. Usar el logo en toda la app**
+  `AppIcon` (cargar el logo desde el `.exe`), `ApplicationIcon` en el `.csproj`, ícono de la bandeja al tamaño chico del sistema, `Form.Icon` en el editor y en Configuración. TrayApp es dueño del ícono y lo libera al salir.
+  *Cumple:* R33
+  *Hecho cuando:* prueba automática de los tamaños; en el checklist, el logo se ve en la bandeja, la notificación, el editor, Configuración, la barra de tareas y el Explorador, al 100 % y al 150 %, con tema claro y oscuro.
+
+- [ ] **T21. Publicar la versión con logo**
+  Volver a publicar en `%LOCALAPPDATA%\Programs\CapturaTool` y comprobar que el arranque con Windows sigue apuntando ahí.
+  *Cumple:* R33 en el .exe publicado; criterios del Ciclo 2 del brief
+  *Hecho cuando:* el .exe publicado muestra el logo en todos los lugares y los tres criterios del Ciclo 2 se cumplen.
+
 ---
 
 ## Trazabilidad: requisitos → tareas
@@ -140,5 +159,6 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
 | NF4 | T01, T04 |
 | NF5 | T14 |
 | NF6, NF7 | T01, T18 |
+| R33 | T19, T20, T21 |
 
-Todos los requisitos de la spec v1.1 tienen al menos una tarea.
+Todos los requisitos de la spec v1.4 tienen al menos una tarea.

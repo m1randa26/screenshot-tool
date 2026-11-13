@@ -64,3 +64,30 @@ Una persona (yo). Uso intensivo, de 10 a 15 capturas al día, para documentar tr
 | Texto simple, sin formato | Solo se usan etiquetas cortas |
 | Guardar entra a v1 | Caso real: evidencia de flujos con varias capturas |
 | Carpeta fija configurable | Elegir destino cada vez es pérdida de tiempo |
+
+---
+
+## Ciclo 2: identidad visual
+
+**Fecha:** 2026-11-12 · **Estado:** ✅ Aprobado
+
+### Problema
+
+El programa usa el ícono genérico de Windows (un recuadro de aplicación). En la bandeja se confunde con otros programas, y en la barra de tareas y el Explorador no se distingue qué es.
+
+### Alcance
+
+- Un **logo propio**, simple y reconocible a 16 px.
+- El logo se usa en el **ícono de la bandeja**, las **ventanas** (editor y Configuración), la **barra de tareas** y el **archivo .exe**.
+
+### Criterios de "terminado"
+
+1. En la bandeja se reconoce CapturaTool de un vistazo, sin pasar el mouse por encima.
+2. El logo se ve nítido con escalado de 100 %, 125 % y 150 %.
+3. El logo se distingue con la barra de tareas en tema claro y en tema oscuro.
+
+### Fuera de alcance
+
+- Cambiar el diseño de las ventanas, la barra de herramientas o los colores del editor.
+- Íconos para las herramientas del editor (siguen siendo botones con texto).
+- Un logo animado o que cambie según el estado del programa.

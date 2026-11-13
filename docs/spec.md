@@ -1,6 +1,6 @@
 # Spec: Herramienta de capturas para Windows
 
-**Versión:** 1.3 · **Fecha:** 2026-11-12 · **Estado:** ✅ Aprobada · **Fase:** 1 (Especificación)
+**Versión:** 1.4 · **Fecha:** 2026-11-12 · **Estado:** ✅ Aprobada · **Fase:** 1 (Especificación)
 **Basado en:** [`brief.md`](brief.md)
 
 > Esta spec describe **qué hace** el programa, no **con qué se construye**. La tecnología se decide en la Fase 2 (arquitectura).
@@ -119,6 +119,12 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 |---|---|
 | **R32** | Si ocurre un error inesperado, el programa **no se cierra en silencio**: lo registra en un archivo de log y avisa con una notificación. |
 
+### 4.7 Identidad visual *(Ciclo 2)*
+
+| ID | Requisito |
+|---|---|
+| **R33** | El programa tiene un **logo propio** y lo usa en el ícono de la bandeja, en las ventanas (editor y Configuración), en la barra de tareas y en el archivo `.exe`. El logo es simple y reconocible a 16 × 16 px. **[P]** |
+
 ---
 
 ## 5. Requisitos no funcionales
@@ -147,6 +153,8 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 | Pantalla con escalado 150 % | Captura nítida, sin desfase | NF4 |
 | Varios monitores | La selección funciona en cualquier monitor; el clic captura solo el monitor donde se hizo | R7, R8 |
 | Escribir texto y presionar `Esc` | Cancela solo ese texto, no la captura **[P]** | R14 |
+| Escalado 125 % o 150 % (bandeja, ventanas, Explorador) | El logo se ve nítido: el archivo trae cada tamaño que pide Windows y no se estira uno chico **[P]** | R33 |
+| Barra de tareas en tema claro o en tema oscuro | El logo se distingue en los dos (tiene borde o fondo propio, no depende del color de la barra) **[P]** | R33 |
 
 ## 7. Fuera de alcance v1
 
@@ -164,12 +172,21 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 | 4. Todo se puede deshacer | R18, R19, R27 |
 | 5. Una semana sin volver a la herramienta de Windows | Todo lo anterior + R1 (siempre disponible) + R32 (nunca muere en silencio) |
 
+**Ciclo 2: identidad visual**
+
+| Criterio | Cubierto por |
+|---|---|
+| 1. Se reconoce en la bandeja de un vistazo | R33 |
+| 2. Nítido al 100 %, 125 % y 150 % | R33 + caso borde de escalado |
+| 3. Se distingue en tema claro y oscuro | R33 + caso borde de tema |
+
 ---
 
 ## 9. Historial de revisión
 
 No quedan preguntas abiertas.
 
+- **v1.4 (2026-11-12):** Ciclo 2 del brief (identidad visual). Se agrega **R33** (logo propio) y dos casos borde (escalado y tema de la barra de tareas), aprobados por el usuario.
 - **v1.3 (2026-11-12):** **NF2** se ajusta de 300 ms a **350 ms**, aprobado por el usuario en T17. Medido con el .exe publicado y el editor completo, tras optimizar (barra de herramientas y caché del lienzo): zonas 159–260 ms, pantalla completa 1920 × 1080 260–324 ms (1 de 20 capturas por encima de 300). En pantalla completa, unos 80 ms son crear y maximizar la ventana y unos 30 ms reducir la captura, ambos necesarios; bajarlo más exigía crear el editor por adelantado, con más complejidad, a cambio de unos 25 ms casi imperceptibles. Detalle en `checklist-manual.md`, sección "T17".
 - **v1.2 (2026-11-10):** **NF1** se ajusta de 200 ms a **250 ms**, aprobado por el usuario en el hito del esqueleto. Medido con el .exe publicado: 188–239 ms tras optimizar. El resto del tiempo es congelar la pantalla (GDI) y mostrar las ventanas; bajarlo más exigía hilos o una técnica de captura más compleja, a cambio de unos 40 ms casi imperceptibles. Detalle en `checklist-manual.md`, sección "Hito".
 - **v1.1 (2026-11-10):** a partir de la crítica de arquitectura se agregó **R32** (errores) y la verificación del portapapeles en **R21**.

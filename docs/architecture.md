@@ -1,6 +1,6 @@
 # Arquitectura: Herramienta de capturas para Windows
 
-**Versión:** 1.1 · **Fecha:** 2026-11-12 · **Estado:** ✅ Aprobada · **Fase:** 2 (Arquitectura)
+**Versión:** 1.2 · **Fecha:** 2026-11-12 · **Estado:** ✅ Aprobada · **Fase:** 2 (Arquitectura)
 **Basado en:** [`spec.md`](spec.md) v1.1 · **Decisiones:** [ADR 0001](adr/0001-tecnologia.md), [ADR 0002](adr/0002-interfaz-winforms.md), [ADR 0003](adr/0003-distribucion.md)
 
 > Este documento explica **cómo está organizado** el programa: sus piezas, qué hace cada una y cómo se comunican. Los requisitos (R*, NF*) remiten a la spec.
@@ -71,6 +71,7 @@ El programa es **un solo proceso** que vive en la bandeja. No tiene ventana prin
 | **FileSaver** + **FileNamer** | Guarda el PNG; genera el nombre y resuelve duplicados; crea la carpeta. | R23–R25 |
 | **Notifier** | Muestra avisos breves de Windows. | R5, R21, R26 |
 | **AppSettings** + **SettingsForm** | Leer y guardar la configuración; ventana para cambiarla. | R28–R31 |
+| **AppIcon** *(Ciclo 2)* | Carga el logo desde el `.exe` y lo entrega al tamaño que pide Windows (bandeja chica, ventanas). | R33 |
 
 ### Regla de dependencias
 
@@ -126,6 +127,7 @@ En .NET, las imágenes (`Bitmap`) y los objetos de dibujo (`Graphics`, `Pen`, `B
 - Todo `Bitmap` tiene **un dueño claro** que lo libera.
 - La captura congelada se libera al cerrar el overlay; la imagen base y la caché, al cerrar el editor.
 - Se verifica en el checklist: la memoria vuelve al nivel de reposo después de 20 capturas seguidas.
+- Los íconos (`Icon`) también se liberan: **TrayApp** es dueño del logo durante toda la vida del programa y lo libera al salir. Las ventanas lo usan prestado (`Form.Icon`) y no lo liberan. *(Ciclo 2)*
 
 ## 5. Integraciones con Windows
 
@@ -141,6 +143,7 @@ Estas son las partes de **mayor riesgo**: es donde la herramienta de Windows te 
 | **Bandeja y avisos (R2, R21, R26)** | `NotifyIcon` de WinForms | En Windows 11 los avisos se muestran como notificaciones del sistema. |
 | **Arranque con Windows (R1, R30)** | Entrada en el registro del usuario: `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` | No requiere permisos de administrador. |
 | **Instancia única (R3)** | *Mutex* con nombre | Mecanismo estándar de Windows. |
+| **Logo (R33)** *(Ciclo 2)* | Un archivo `.ico` con varios tamaños (16, 20, 24, 32, 40, 48, 64 y 256 px). En el `.csproj`: `ApplicationIcon` (ícono del `.exe` en el Explorador y la barra de tareas) y `EmbeddedResource` (para cargarlo desde el código). La bandeja usa el tamaño chico del sistema (`SystemInformation.SmallIconSize`), que cambia con el escalado. | Con cada tamaño dibujado aparte, Windows no estira uno chico y el logo queda nítido al 100–150 %. Sin paquetes NuGet. |
 
 ## 6. Estructura de carpetas **[P]**
 
@@ -155,9 +158,12 @@ captura-tool/
 │       ├── Capture/            ← ScreenCapture, SelectionOverlay
 │       ├── Editor/             ← EditorForm, AnnotationDocument, ViewTransform, Annotations/
 │       ├── Output/             ← ImageRenderer, ClipboardWriter, FileSaver, FileNamer
-│       └── Configuration/      ← AppSettings, SettingsForm
+│       ├── Configuration/      ← AppSettings, SettingsForm
+│       └── Resources/          ← CapturaTool.ico (Ciclo 2)
 ├── tests/
 │   └── CapturaTool.Tests/      ← pruebas automáticas (xUnit)
+├── tools/
+│   └── IconMaker/              ← programa chico que dibuja el logo y genera el .ico (Ciclo 2; fuera de la solución)
 └── CLAUDE.md                   ← reglas para la IA (Fase 3)
 ```
 
@@ -169,7 +175,7 @@ Los nombres en el código van en **inglés** (convención de C#) y los comentari
 
 | Tipo | Qué cubre | Cómo |
 |---|---|---|
-| **Automáticas** | AnnotationDocument (deshacer/rehacer), ViewTransform (conversión ida y vuelta con distintos zooms), FileNamer (formato, duplicados), AppSettings (valores por defecto, archivo dañado), ImageRenderer (la imagen final contiene las anotaciones) | xUnit, se corren con `dotnet test` |
+| **Automáticas** | AnnotationDocument (deshacer/rehacer), ViewTransform (conversión ida y vuelta con distintos zooms), FileNamer (formato, duplicados), AppSettings (valores por defecto, archivo dañado), ImageRenderer (la imagen final contiene las anotaciones), AppIcon (el logo está dentro del .exe y trae todos los tamaños) | xUnit, se corren con `dotnet test` |
 | **Manuales (checklist)** | Atajo, overlay, multimonitor, **dos monitores con escalados distintos**, portapapeles con Slack/GitHub, arranque con Windows, avisos, **memoria tras 20 capturas**, error provocado → aparece en el log y se avisa | Lista en `docs/checklist-manual.md` (se crea en la Fase 4) |
 | **Rendimiento** | NF1, NF2 (tiempos), NF3 (memoria) | Medición manual con cronómetro interno en modo debug y el Administrador de tareas |
 
@@ -195,3 +201,4 @@ Las integraciones con Windows son difíciles de automatizar; por eso la lógica 
 - **2026-11-10:** propuestas [P] aprobadas.
 - **2026-11-10 (crítica):** se agregaron ErrorHandler + Logger (R32), ViewTransform, caché de dibujo, regla de liberación de memoria, verificación del portapapeles, reescritura de la ruta de arranque, ReadyToRun y nuevos casos del checklist. La ventaja de WinForms se marcó como *estimada, por medir*.
 - **v1.1 (2026-11-12, T17, aprobado por el usuario):** el portapapeles se escribe con las **funciones nativas de Windows** en vez de `Clipboard.SetDataObject`. Medido en T17: con `SetDataObject` y un `Bitmap`, cada copia dejaba la imagen entera sin liberar (+8 MB y +1 objeto GDI por copia de 1920 × 1080, sin límite), lo que rompía NF3. Con las funciones nativas la memoria queda estable. Se mantienen los reintentos, la verificación y los dos formatos (DIB + PNG). Nuevo componente `NativeClipboard` en `Platform/`. También en T17: la meta de NF2 pasa a 350 ms (spec v1.3).
+- **v1.2 (2026-11-12, aprobada por el usuario):** Ciclo 2 (R33, logo). Nuevo componente `AppIcon`, carpeta `Resources/` con el `.ico`, herramienta `tools/IconMaker` para regenerarlo, regla de liberación para los íconos y prueba automática de los tamaños.
