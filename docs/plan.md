@@ -118,7 +118,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
 
 > Se puede avanzar mientras T18 sigue abierta: T21 publica el mismo programa con el logo nuevo, sin reiniciar la semana de prueba.
 
-- [ ] **T19. Diseño del logo**
+- [x] **T19. Diseño del logo**
   Proponer 2 o 3 diseños simples y elegir uno con el usuario. `tools/IconMaker` dibuja el elegido en cada tamaño (16, 20, 24, 32, 40, 48, 64 y 256 px) y genera `src/CapturaTool/Resources/CapturaTool.ico`.
   *Cumple:* R33 (diseño), casos borde de escalado y de tema
   *Hecho cuando:* el usuario aprueba el diseño viendo cada tamaño sobre fondo claro y oscuro, y el `.ico` generado trae los 8 tamaños.
