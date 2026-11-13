@@ -111,7 +111,11 @@ public class EditorCanvas : Control
     protected override void OnResize(EventArgs e)
     {
         View = new ViewTransform(_document.BaseImage.Size, ClientSize);
-        RebuildCache();
+
+        // NF2: la caché se tira y se vuelve a dibujar recién al pintar. Al abrir el editor, el lienzo
+        // pasa por tamaños provisorios que nadie ve; dibujar la captura en cada uno costaba ~20 ms.
+        _cache?.Dispose();
+        _cache = null;
         Invalidate();
         base.OnResize(e);
     }
@@ -164,6 +168,10 @@ public class EditorCanvas : Control
 
     protected override void OnPaintBackground(PaintEventArgs e)
     {
+        if (_cache == null)
+        {
+            RebuildCache(); // después de un cambio de tamaño (ver OnResize)
+        }
         if (_cache == null)
         {
             base.OnPaintBackground(e);

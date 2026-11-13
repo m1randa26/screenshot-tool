@@ -104,7 +104,7 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
 
 ## Etapa 4: Cierre
 
-- [ ] **T17. Rendimiento y memoria**
+- [x] **T17. Rendimiento y memoria**
   Volver a medir NF1–NF3 con el editor completo. Prueba de 20 capturas seguidas: la memoria vuelve al nivel de reposo. Completar el checklist manual entero.
   *Cumple:* NF1, NF2, NF3
   *Hecho cuando:* todas las metas se cumplen y el checklist está completo, o cada desviación está documentada con una decisión.

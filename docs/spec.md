@@ -1,6 +1,6 @@
 # Spec: Herramienta de capturas para Windows
 
-**Versión:** 1.2 · **Fecha:** 2026-11-10 · **Estado:** ✅ Aprobada · **Fase:** 1 (Especificación)
+**Versión:** 1.3 · **Fecha:** 2026-11-12 · **Estado:** ✅ Aprobada · **Fase:** 1 (Especificación)
 **Basado en:** [`brief.md`](brief.md)
 
 > Esta spec describe **qué hace** el programa, no **con qué se construye**. La tecnología se decide en la Fase 2 (arquitectura).
@@ -126,7 +126,7 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 | ID | Requisito |
 |---|---|
 | **NF1** | El modo de selección aparece en **menos de 250 ms** después del atajo. **[P]** *(Ajustada desde 200 ms en v1.2, ver §9.)* |
-| **NF2** | El editor aparece en **menos de 300 ms** después de soltar la selección. *(Hace medible "sin espera perceptible", criterio 3.)* **[P]** |
+| **NF2** | El editor aparece en **menos de 350 ms** después de soltar la selección. *(Hace medible "sin espera perceptible", criterio 3.)* **[P]** *(Ajustada desde 300 ms en v1.3, ver §9.)* |
 | **NF3** | En reposo usa muy pocos recursos: **~0 % de CPU** y memoria baja (meta: menos de 50 MB). **[P]** |
 | **NF4** | La captura conserva la **resolución nativa** y se ve correcta con escalado de pantalla (100 %, 125 %, 150 %). |
 | **NF5** | Las imágenes no pierden calidad (PNG). |
@@ -170,6 +170,7 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 
 No quedan preguntas abiertas.
 
+- **v1.3 (2026-11-12):** **NF2** se ajusta de 300 ms a **350 ms**, aprobado por el usuario en T17. Medido con el .exe publicado y el editor completo, tras optimizar (barra de herramientas y caché del lienzo): zonas 159–260 ms, pantalla completa 1920 × 1080 260–324 ms (1 de 20 capturas por encima de 300). En pantalla completa, unos 80 ms son crear y maximizar la ventana y unos 30 ms reducir la captura, ambos necesarios; bajarlo más exigía crear el editor por adelantado, con más complejidad, a cambio de unos 25 ms casi imperceptibles. Detalle en `checklist-manual.md`, sección "T17".
 - **v1.2 (2026-11-10):** **NF1** se ajusta de 200 ms a **250 ms**, aprobado por el usuario en el hito del esqueleto. Medido con el .exe publicado: 188–239 ms tras optimizar. El resto del tiempo es congelar la pantalla (GDI) y mostrar las ventanas; bajarlo más exigía hilos o una técnica de captura más compleja, a cambio de unos 40 ms casi imperceptibles. Detalle en `checklist-manual.md`, sección "Hito".
 - **v1.1 (2026-11-10):** a partir de la crítica de arquitectura se agregó **R32** (errores) y la verificación del portapapeles en **R21**.
 

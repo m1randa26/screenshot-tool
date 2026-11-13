@@ -252,3 +252,47 @@ Archivo: `%APPDATA%\CapturaTool\settings.json`. Para abrirlo: `Win + R` → `%AP
 - [x] Desmarcar "Iniciar con Windows" → **Guardar**: `reg query` dice que no existe la entrada; volver a marcarla → la entrada aparece con la ruta del .exe entre comillas. (R30)
 - [x] Con la casilla marcada, **cerrar sesión o reiniciar Windows**: CapturaTool arranca solo (ícono en la bandeja, `Ctrl + Alt + S` funciona). (R1)
 - [x] **Mover el .exe:** salir de la app, copiar la carpeta `src\CapturaTool\bin\Debug\net10.0-windows\win-x64` a otro lugar (por ejemplo el Escritorio) y abrir `CapturaTool.exe` desde la copia: `reg query` muestra la ruta nueva. Después salir, abrir de nuevo la versión normal (vuelve a la ruta original) y borrar la copia. (R1)
+
+## T17. Rendimiento y memoria (mediciones)
+
+**Fecha:** 2026-11-12 · **Build:** Release publicado (ReadyToRun) · **Equipo:** el mismo del hito · **Método:** script que simula el atajo y el mouse; en cada captura dibuja rectángulo, círculo, flecha, resaltador y texto, deshace, rehace y copia con `Ctrl + C`. Se combinan pantalla completa y zonas de 300 × 200, 600 × 400 y 1200 × 700. Tiempos de las líneas `Medición:` del log; memoria del proceso por script.
+
+**Primera medición (editor completo, sin cambios):**
+
+| Meta | Resultado | ¿Cumple? |
+|---|---|---|
+| **NF1:** selección en menos de 250 ms | 138–199 ms | ✅ |
+| **NF2:** editor en menos de 300 ms | 197–370 ms; 4 de 20 por encima, todas de pantalla completa | ❌ |
+| **NF3:** CPU en reposo | 0 ms de CPU en 60 s | ✅ |
+| **NF3:** memoria | Al arrancar 7,7 MB; tras 20 capturas **103 MB, sin bajar** después de 90 s | ❌ |
+
+**Diagnóstico de memoria:** la memoria crecía solo al copiar (las capturas descartadas no la subían) y no era memoria de .NET. En una prueba aislada, `Clipboard.SetDataObject` de WinForms con un `Bitmap` dejaba la imagen entera sin liberar en cada copia (+8 MB y +1 objeto GDI por copia de 1920 × 1080, sin límite).
+
+**Diagnóstico de NF2:** el paso más lento era crear la barra de herramientas (50–160 ms), que se reacomodaba con cada botón agregado. Además, la caché del lienzo se dibujaba dos veces de más en tamaños provisorios (~20 ms en pantalla completa).
+
+**Cambios (aprobados por el usuario):**
+- El portapapeles se escribe con las funciones nativas de Windows (`NativeClipboard`), con los mismos dos formatos, reintentos y verificación (architecture.md v1.1).
+- Al cerrar cada editor, una limpieza de .NET (`GCCollectionMode.Aggressive`, 1–3 ms) devuelve la memoria a Windows.
+- La barra de herramientas se acomoda una sola vez (`SuspendLayout`/`ResumeLayout`) y la caché del lienzo se dibuja al pintar, no en cada cambio de tamaño.
+
+**Medición final (mismo método, 20 capturas):**
+
+| Meta | Resultado | ¿Cumple? |
+|---|---|---|
+| **NF1:** selección en menos de 250 ms | 130–221 ms | ✅ |
+| **NF2:** editor en menos de 300 ms | Zonas 159–260 ms · pantalla completa 260–324 ms (1 de 20 por encima: 324) | ⚠️ → ✅ con la meta nueva de 350 ms |
+| **NF3:** CPU en reposo | 0 ms en 60 s al arrancar y 0 ms en 30 s tras usarlo | ✅ |
+| **NF3:** memoria | Al arrancar 9,6 MB; tras 20 capturas **24,3 MB**, igual a los 30 s y a los 90 s. Objetos GDI 31 → 34 | ✅ |
+
+**Decisión (2026-11-12):** el usuario aprobó ajustar **NF2 a menos de 350 ms** (spec v1.3). En pantalla completa, unos 80 ms son crear y maximizar la ventana y unos 30 ms reducir la captura; bajarlo más exigía crear el editor por adelantado. Con la meta nueva, todas las mediciones cumplen.
+
+**Pasada final con la versión nueva** (lo que cambió en T17 y lo que no se puede medir con el script):
+
+- [x] `Ctrl + C` con anotaciones y pegar en **Slack**: se ve la imagen con las anotaciones. (R21)
+- [x] Pegar en **GitHub** (un comentario en el navegador): sube la imagen. (R21)
+- [x] Pegar en **Paint** (`Ctrl + V`): la imagen con las anotaciones, nítida y del tamaño correcto. (R21)
+- [x] Con el portapapeles bloqueado (bloque de PowerShell de T06), `Ctrl + C`: el aviso aparece en ~1 s, el editor sigue abierto y `Ctrl + S` guarda. (R22)
+- [x] Flujo completo: `Ctrl + Alt + S` → zona → anotar → `Ctrl + C` → pegar; otra captura → `Ctrl + S` → el archivo está en la carpeta configurada.
+- [x] Con un monitor al **150 %**: captura nítida y editor legible. (NF4)
+- [x] Menú "Provocar error (prueba)": aparece el aviso y el error queda en el log. (R32)
+- [x] Después de varias capturas, el Administrador de tareas muestra CapturaTool por debajo de 50 MB. (NF3)
