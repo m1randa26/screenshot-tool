@@ -23,6 +23,7 @@ dotnet build
 dotnet test
 dotnet run --project src/CapturaTool
 dotnet publish src/CapturaTool -c Release
+dotnet publish src/CapturaTool -c Release -p:Channel=Insider   # versión Insider (ADR 0004)
 ```
 
 ## Convenciones
@@ -47,3 +48,4 @@ dotnet publish src/CapturaTool -c Release
 8. **No modificar la spec, la arquitectura ni los ADRs por cuenta propia.** Si algo no cuadra, detenerse y plantearlo.
 9. **Si algo falla dos veces seguidas**, detenerse y volver a planear en lugar de seguir parchando.
 10. No implementar nada de "Fuera de alcance" (spec §7), aunque parezca fácil.
+11. **Ramas (ADR 0004):** lo nuevo se hace en `insiders`; `main` solo recibe correcciones urgentes y lo que ya pasó la prueba Insider. Antes de empezar una tarea, comprobar en qué rama se está. Toda corrección en `main` se une también a `insiders`. `insiders` se une a `main` solo con un *pull request* aprobado por el usuario.

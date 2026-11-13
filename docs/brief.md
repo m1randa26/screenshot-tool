@@ -91,3 +91,39 @@ El programa usa el ícono genérico de Windows (un recuadro de aplicación). En 
 - Cambiar el diseño de las ventanas, la barra de herramientas o los colores del editor.
 - Íconos para las herramientas del editor (siguen siendo botones con texto).
 - Un logo animado o que cambie según el estado del programa.
+
+---
+
+## Ciclo 3: Insiders
+
+**Fecha:** 2026-11-13 · **Estado:** ✅ Aprobado · **Rama:** `insiders` ([ADR 0004](adr/0004-rama-insiders.md))
+
+### Problema
+
+- Para copiar **texto que está en una imagen** (un mensaje de error en una captura, código en un video, un PDF escaneado) hay que escribirlo a mano.
+- Capturar exige el teclado. Cuando la mano está en el mouse, los **botones laterales** quedan sin usar.
+- La interfaz funciona pero se ve **anticuada**: botones de solo texto, sin tema oscuro, sin el aspecto de Windows 11.
+- Probar estas funciones no debe poner en riesgo la versión estable que se usa todos los días.
+
+### Alcance
+
+- **Versión Insider** instalada junto a la estable, sin chocar con ella (ADR 0004).
+- **Leer texto:** un atajo propio → seleccionar una zona → el texto queda en el portapapeles, sin pasar por el editor.
+- **Botones laterales del mouse:** uno abre la captura normal y el otro, leer texto.
+- **Interfaz moderna, en WinForms:** barra con íconos, tema claro y oscuro según Windows y aspecto de Windows 11, en el editor y en Configuración.
+
+### Criterios de "terminado"
+
+1. Leer texto: desde el atajo hasta pegar el texto, **sin ningún paso extra** después de seleccionar. El texto sale correcto en capturas de texto de pantalla normal, en español y en inglés.
+2. Con **solo el mouse**: botón lateral → seleccionar → editor (o texto en el portapapeles), sin tocar el teclado.
+3. La interfaz sigue el **tema de Windows** (claro u oscuro) y se ve como un programa de Windows 11.
+4. La estable y la Insider **conviven** en la misma PC sin interferir.
+5. Las funciones nuevas mantienen las metas de rapidez y memoria (NF1–NF3).
+6. Cada función lleva **3 días de uso real sin fallos** en la Insider antes de pasar a `main`.
+
+### Fuera de alcance
+
+- Texto escrito a mano, traducción, o leer texto de una captura que ya está abierta en el editor.
+- Elegir qué botón del mouse hace cada cosa (los botones laterales quedan fijos).
+- Cambiar de framework (WPF, WinUI 3): la interfaz se moderniza dentro de WinForms (ADR 0002 sin cambios).
+- Rediseñar el flujo de captura: los pasos y atajos actuales se mantienen.

@@ -1,7 +1,7 @@
 # Plan de implementación
 
-**Versión:** 1.1 · **Fecha:** 2026-11-12 · **Estado:** ✅ Aprobado · **Fase:** 4 (Plan)
-**Basado en:** [`spec.md`](spec.md) v1.4 · [`architecture.md`](architecture.md) v1.2
+**Versión:** 1.2 (rama `insiders`) · **Fecha:** 2026-11-13 · **Estado:** ✅ Aprobado · **Fase:** 4 (Plan)
+**Basado en:** [`spec.md`](spec.md) v1.5 · [`architecture.md`](architecture.md) v1.3 · [ADR 0004](adr/0004-rama-insiders.md)
 
 > **Cómo se usa:** se toma **una tarea a la vez**, en orden. Cada tarea indica qué requisitos cumple y cuándo se considera terminada. Al terminarla, se marca `[x]` y se hace commit (con aprobación).
 >
@@ -133,6 +133,40 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
   *Cumple:* R33 en el .exe publicado; criterios del Ciclo 2 del brief
   *Hecho cuando:* el .exe publicado muestra el logo en todos los lugares y los tres criterios del Ciclo 2 se cumplen.
 
+## Etapa 6: Ciclo 3, Insiders *(rama `insiders`)*
+
+> Todo se hace en la rama `insiders` y se prueba con la versión Insider instalada junto a la estable. Nada pasa a `main` hasta T27 (ADR 0004).
+
+- [ ] **T22. Versión Insider**
+  `AppIdentity` y la opción `-p:Channel=Insider`: nombre, `.exe`, atajos con `Shift`, carpeta de datos, mutex y entrada de arranque propios. Logo Insider generado con `tools/IconMaker`. Publicar en `%LOCALAPPDATA%\Programs\CapturaTool Insider`.
+  *Cumple:* R34
+  *Hecho cuando:* prueba automática de que la estable y la Insider no comparten ningún dato; las dos instaladas y abiertas a la vez, cada una con su ícono, su atajo, su configuración y su arranque con Windows.
+
+- [ ] **T23. Leer texto**
+  `TextReader` (OCR de Windows), `TextPreview`, atajo `Ctrl + Alt + T` y menú **Leer texto**, el modo de selección para texto, copiar texto al portapapeles con reintentos y los avisos.
+  *Cumple:* R35, R36, R37, R38, NF8
+  *Hecho cuando:* pruebas automáticas de `TextPreview` y de reconocer un texto dibujado; en el checklist, texto de pantalla en español e inglés llega bien al portapapeles en menos de 1 s, y una zona sin texto no cambia el portapapeles.
+
+- [ ] **T24. Botones laterales del mouse**
+  `MouseButtonHook` en su propio hilo: atrás = capturar, adelante = leer texto, y los dos se consumen mientras el programa está abierto.
+  *Cumple:* R39, R40
+  *Hecho cuando:* en el checklist, cada botón hace su acción desde cualquier programa, el navegador no va atrás ni adelante, al salir vuelven a la normalidad, y con estable e Insider abiertas un botón actúa una sola vez.
+
+- [ ] **T25. Tema claro/oscuro y aspecto de Windows 11**
+  `Theme`: colores según Windows, barra de título oscura, esquinas redondeadas y tipografía del sistema, en el editor y en Configuración.
+  *Cumple:* R41, R43
+  *Hecho cuando:* prueba automática de la lectura del tema; en el checklist, las dos ventanas se ven bien en tema claro y en oscuro, al 100 % y al 150 %.
+
+- [ ] **T26. Barra del editor con íconos**
+  `ModernToolbar`: íconos de Segoe Fluent Icons, círculos de color, marca de lo elegido y textos de ayuda con atajos.
+  *Cumple:* R42
+  *Hecho cuando:* en el checklist, se reconoce cada herramienta sin leer, los textos de ayuda muestran el nombre y el atajo, y NF2 se sigue cumpliendo.
+
+- [ ] **T27. Medir y pasar a estable**
+  Volver a medir NF1–NF3 y NF8 con la Insider. Usarla al menos 3 días sin fallos. Después, *pull request* de `insiders` a `main` (con aprobación), publicar la estable y dejar la Insider al día.
+  *Cumple:* NF1–NF3, NF8; criterios del Ciclo 3 del brief
+  *Hecho cuando:* las metas se cumplen o cada desviación tiene una decisión documentada, pasaron 3 días sin fallos y `main` tiene el Ciclo 3.
+
 ---
 
 ## Trazabilidad: requisitos → tareas
@@ -160,5 +194,10 @@ Medir **NF1** (menos de 250 ms; era 200 ms hasta la spec v1.2), **NF2** (menos d
 | NF5 | T14 |
 | NF6, NF7 | T01, T18 |
 | R33 | T19, T20, T21 |
+| R34 | T22 |
+| R35–R38, NF8 | T23, T27 |
+| R39, R40 | T24 |
+| R41, R43 | T25 |
+| R42 | T26 |
 
-Todos los requisitos de la spec v1.4 tienen al menos una tarea.
+Todos los requisitos de la spec v1.5 tienen al menos una tarea.

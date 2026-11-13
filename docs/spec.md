@@ -1,6 +1,6 @@
 # Spec: Herramienta de capturas para Windows
 
-**Versión:** 1.4 · **Fecha:** 2026-11-12 · **Estado:** ✅ Aprobada · **Fase:** 1 (Especificación)
+**Versión:** 1.5 · **Fecha:** 2026-11-13 · **Estado:** ✅ Aprobada (v1.5 en la rama `insiders`) · **Fase:** 1 (Especificación)
 **Basado en:** [`brief.md`](brief.md)
 
 > Esta spec describe **qué hace** el programa, no **con qué se construye**. La tecnología se decide en la Fase 2 (arquitectura).
@@ -125,6 +125,38 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 |---|---|
 | **R33** | El programa tiene un **logo propio** y lo usa en el ícono de la bandeja, en las ventanas (editor y Configuración), en la barra de tareas y en el archivo `.exe`. El logo es simple y reconocible a 16 × 16 px. **[P]** |
 
+### 4.8 Insiders *(Ciclo 3, rama `insiders`)*
+
+**Versión Insider**
+
+| ID | Requisito |
+|---|---|
+| **R34** | Existe una **versión Insider** que se instala junto a la estable sin interferir: otro nombre ("CapturaTool Insider"), el logo con una marca de color propia, su propia carpeta de configuración y log, su propia instancia única y su propia entrada de arranque con Windows. Sus atajos de teclado son los de la estable **más `Shift`** (por ejemplo, `Ctrl + Alt + Shift + S`). Detalle en el [ADR 0004](adr/0004-rama-insiders.md). |
+
+**Leer texto**
+
+| ID | Requisito |
+|---|---|
+| **R35** | `Ctrl + Alt + T` (o **Leer texto** en el menú del ícono) activa el modo de selección para **leer texto**. El modo se ve y funciona igual que el de captura (R6–R9): arrastrar elige una zona, un clic elige el monitor, `Esc` cancela. |
+| **R36** | Al soltar la selección, el programa reconoce el texto de esa zona y lo **copia al portapapeles como texto**, sin abrir el editor. Respeta los saltos de línea. Avisa con una notificación breve que muestra el comienzo del texto copiado. **[P]** |
+| **R37** | Si en la zona no hay texto, avisa "No se encontró texto" y **no cambia** el portapapeles. |
+| **R38** | El reconocimiento usa los idiomas instalados en Windows (por ejemplo, español e inglés) y funciona **sin internet**. Si Windows no tiene ningún idioma de reconocimiento disponible, el aviso explica cómo agregarlo. |
+
+**Botones laterales del mouse**
+
+| ID | Requisito |
+|---|---|
+| **R39** | El botón lateral **atrás** del mouse hace lo mismo que `Ctrl + Alt + S` (capturar) y el botón **adelante**, lo mismo que `Ctrl + Alt + T` (leer texto), desde cualquier programa. |
+| **R40** | Mientras CapturaTool está abierto, esos dos botones **solo** hacen su acción: el programa que está debajo (navegador, Explorador) ya no recibe el "atrás" ni el "adelante". Al salir de CapturaTool vuelven a funcionar como siempre. **[P]** |
+
+**Interfaz moderna** *(dentro de WinForms, ADR 0002)*
+
+| ID | Requisito |
+|---|---|
+| **R41** | El editor y Configuración siguen el **tema de Windows**: claro u oscuro, incluida la barra de título. **[P]** |
+| **R42** | La barra del editor muestra **íconos** en lugar de palabras. Cada botón tiene un texto de ayuda con su nombre y su atajo, si lo tiene. Los colores de la paleta se ven como círculos y el elegido se marca con claridad. **[P]** |
+| **R43** | Las ventanas usan el aspecto de **Windows 11**: esquinas redondeadas, la tipografía del sistema y espaciado uniforme. **[P]** |
+
 ---
 
 ## 5. Requisitos no funcionales
@@ -138,6 +170,7 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 | **NF5** | Las imágenes no pierden calidad (PNG). |
 | **NF6** | Solo **Windows 11**. |
 | **NF7** | Se distribuye como un ejecutable, sin instalador. La configuración se guarda en la carpeta de datos del usuario. |
+| **NF8** | *(Ciclo 3)* Leer texto: el texto llega al portapapeles en **menos de 1 s** después de soltar la selección, en una zona de hasta 1920 × 1080. **[P]** |
 
 ## 6. Casos borde
 
@@ -155,12 +188,20 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 | Escribir texto y presionar `Esc` | Cancela solo ese texto, no la captura **[P]** | R14 |
 | Escalado 125 % o 150 % (bandeja, ventanas, Explorador) | El logo se ve nítido: el archivo trae cada tamaño que pide Windows y no se estira uno chico **[P]** | R33 |
 | Barra de tareas en tema claro o en tema oscuro | El logo se distingue en los dos (tiene borde o fondo propio, no depende del color de la barra) **[P]** | R33 |
+| *(Ciclo 3)* Estable e Insider abiertas a la vez | Cada una con sus atajos (la Insider con `Shift`). Un botón lateral lo atiende **una sola** de las dos: la última que se abrió **[P]** | R34, R39 |
+| `Ctrl + Alt + T` o botón adelante con el editor abierto | Igual que R10: se ignora y el editor pasa al frente **[P]** | R35, R10 |
+| Leer texto en una zona diminuta o con texto muy chico | Si no reconoce nada, aplica R37 (aviso, portapapeles sin cambios) | R37 |
+| Portapapeles ocupado al copiar el texto | Reintenta como R22; si sigue fallando, avisa y el texto no se pierde: se puede volver a leer | R36, R22 |
+| Mouse sin botones laterales | No pasa nada; el teclado y el menú siguen funcionando | R39 |
+| Tema de Windows cambia con una ventana abierta | La ventana se actualiza al volver a abrirla **[P]** | R41 |
 
 ## 7. Fuera de alcance v1
 
 *(Del brief)* Video/GIF · captura de ventana específica · nube o enlaces · historial · Mac/Linux · instalador formal · elegir carpeta y nombre en cada guardado.
 
 *(Nuevos, surgidos en la spec)* Mover o editar anotaciones ya creadas · elegir grosor de línea · texto multilínea o con formato · formatos distintos de PNG · recortar la captura dentro del editor.
+
+*(Ciclo 3, del brief)* Texto escrito a mano · traducción · leer texto de una captura ya abierta en el editor · elegir qué botón del mouse hace cada cosa · cambiar de framework · rediseñar el flujo de captura. *(Nuevos)* Otros botones del mouse (central, rueda) · animaciones o efectos de transparencia (Mica) en las ventanas.
 
 ## 8. Trazabilidad: criterios del brief → requisitos
 
@@ -180,12 +221,24 @@ Programa para Windows que vive en segundo plano. Con `Ctrl + Alt + S` se selecci
 | 2. Nítido al 100 %, 125 % y 150 % | R33 + caso borde de escalado |
 | 3. Se distingue en tema claro y oscuro | R33 + caso borde de tema |
 
+**Ciclo 3: Insiders**
+
+| Criterio | Cubierto por |
+|---|---|
+| 1. Leer texto sin pasos extra | R35, R36, NF8 |
+| 2. Solo con el mouse | R39, R40 |
+| 3. Sigue el tema de Windows, aspecto de Windows 11 | R41, R42, R43 |
+| 4. Estable e Insider conviven | R34 + caso borde de las dos abiertas |
+| 5. Mantiene NF1–NF3 | NF1–NF3, NF8 |
+| 6. 3 días sin fallos antes de `main` | ADR 0004 (proceso, no requisito) |
+
 ---
 
 ## 9. Historial de revisión
 
 No quedan preguntas abiertas.
 
+- **v1.5 (2026-11-13, rama `insiders`, aprobada por el usuario):** Ciclo 3 del brief. Se agregan **R34** (versión Insider), **R35–R38** (leer texto), **R39–R40** (botones laterales; el usuario eligió que el clic se consuma), **R41–R43** (interfaz moderna), **NF8** (rapidez de leer texto) y sus casos borde.
 - **v1.4 (2026-11-12):** Ciclo 2 del brief (identidad visual). Se agrega **R33** (logo propio) y dos casos borde (escalado y tema de la barra de tareas), aprobados por el usuario.
 - **v1.3 (2026-11-12):** **NF2** se ajusta de 300 ms a **350 ms**, aprobado por el usuario en T17. Medido con el .exe publicado y el editor completo, tras optimizar (barra de herramientas y caché del lienzo): zonas 159–260 ms, pantalla completa 1920 × 1080 260–324 ms (1 de 20 capturas por encima de 300). En pantalla completa, unos 80 ms son crear y maximizar la ventana y unos 30 ms reducir la captura, ambos necesarios; bajarlo más exigía crear el editor por adelantado, con más complejidad, a cambio de unos 25 ms casi imperceptibles. Detalle en `checklist-manual.md`, sección "T17".
 - **v1.2 (2026-11-10):** **NF1** se ajusta de 200 ms a **250 ms**, aprobado por el usuario en el hito del esqueleto. Medido con el .exe publicado: 188–239 ms tras optimizar. El resto del tiempo es congelar la pantalla (GDI) y mostrar las ventanas; bajarlo más exigía hilos o una técnica de captura más compleja, a cambio de unos 40 ms casi imperceptibles. Detalle en `checklist-manual.md`, sección "Hito".

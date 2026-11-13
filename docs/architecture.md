@@ -1,6 +1,6 @@
 # Arquitectura: Herramienta de capturas para Windows
 
-**Versión:** 1.2 · **Fecha:** 2026-11-12 · **Estado:** ✅ Aprobada · **Fase:** 2 (Arquitectura)
+**Versión:** 1.3 (rama `insiders`) · **Fecha:** 2026-11-13 · **Estado:** ✅ Aprobada · **Fase:** 2 (Arquitectura)
 **Basado en:** [`spec.md`](spec.md) v1.1 · **Decisiones:** [ADR 0001](adr/0001-tecnologia.md), [ADR 0002](adr/0002-interfaz-winforms.md), [ADR 0003](adr/0003-distribucion.md)
 
 > Este documento explica **cómo está organizado** el programa: sus piezas, qué hace cada una y cómo se comunican. Los requisitos (R*, NF*) remiten a la spec.
@@ -72,10 +72,16 @@ El programa es **un solo proceso** que vive en la bandeja. No tiene ventana prin
 | **Notifier** | Muestra avisos breves de Windows. | R5, R21, R26 |
 | **AppSettings** + **SettingsForm** | Leer y guardar la configuración; ventana para cambiarla. | R28–R31 |
 | **AppIcon** *(Ciclo 2)* | Carga el logo desde el `.exe` y lo entrega al tamaño que pide Windows (bandeja chica, ventanas). | R33 |
+| **AppIdentity** *(Ciclo 3)* | Junta en un solo lugar todo lo que distingue a la estable de la Insider: nombre, logo, atajos, carpeta de datos, nombre del mutex y de la entrada de arranque. Se elige al compilar. Lógica pura. | R34 |
+| **TextReader** *(Ciclo 3)* | Reconoce el texto de una imagen con el OCR de Windows y lo devuelve con sus saltos de línea. | R35–R38 |
+| **TextPreview** *(Ciclo 3)* | Arma el comienzo del texto que se muestra en el aviso (recorta y quita saltos de línea). Lógica pura. | R36 |
+| **MouseButtonHook** *(Ciclo 3)* | Escucha los botones laterales del mouse en todo Windows, los consume y avisa a TrayApp. | R39, R40 |
+| **Theme** *(Ciclo 3)* | Lee si Windows está en tema claro u oscuro y entrega los colores; oscurece la barra de título y pide esquinas redondeadas. | R41, R43 |
+| **ModernToolbar** *(Ciclo 3)* | Dibuja la barra del editor: íconos, círculos de color, marcas de "elegido" y textos de ayuda. | R42 |
 
 ### Regla de dependencias
 
-Las piezas de **lógica** (`AnnotationDocument`, `Annotations`, `ViewTransform`, `FileNamer`, `AppSettings`) **no dependen de ventanas**. Las ventanas usan la lógica, nunca al revés. Así la lógica se puede probar de forma automática (§7) y es más fácil de entender por separado.
+Las piezas de **lógica** (`AnnotationDocument`, `Annotations`, `ViewTransform`, `FileNamer`, `AppSettings`, y en el Ciclo 3 `AppIdentity` y `TextPreview`) **no dependen de ventanas**. Las ventanas usan la lógica, nunca al revés. Así la lógica se puede probar de forma automática (§7) y es más fácil de entender por separado.
 
 ## 4. Modelo de datos
 
@@ -143,6 +149,10 @@ Estas son las partes de **mayor riesgo**: es donde la herramienta de Windows te 
 | **Bandeja y avisos (R2, R21, R26)** | `NotifyIcon` de WinForms | En Windows 11 los avisos se muestran como notificaciones del sistema. |
 | **Arranque con Windows (R1, R30)** | Entrada en el registro del usuario: `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` | No requiere permisos de administrador. |
 | **Instancia única (R3)** | *Mutex* con nombre | Mecanismo estándar de Windows. |
+| **Identidad Insider (R34)** *(Ciclo 3)* | Una opción al publicar: `-p:Channel=Insider`. En el `.csproj` cambia el nombre del `.exe` (`CapturaTool.Insider`), el logo y define la constante `INSIDER`; `AppIdentity` elige sus datos con ella. Sin `Channel`, se compila la estable. | El mismo código sirve para las dos; ver ADR 0004. |
+| **Leer texto (R35–R38)** *(Ciclo 3)* | OCR de Windows (`Windows.Media.Ocr`), con los idiomas del perfil del usuario. Para usarlo, el `.csproj` apunta a `net10.0-windows10.0.19041.0`. | Funciona sin internet y sin paquetes NuGet en el proyecto. **Costo medido:** el `.exe` pasa de ~0,5 MB a ~25 MB porque incluye la "traducción" de las APIs de Windows a .NET; .NET la descarga sola al compilar. En esta PC hay OCR para `es-MX` y `en-US`. |
+| **Botones laterales (R39, R40)** *(Ciclo 3)* | Gancho global de bajo nivel del mouse (`SetWindowsHookEx` con `WH_MOUSE_LL`) en **un hilo propio** con su propia cola de mensajes. Detecta `XBUTTON1` (atrás) y `XBUTTON2` (adelante), los consume y le pide a TrayApp la acción en el hilo de la interfaz. | Windows **quita el gancho en silencio** si tarda en responder; en su propio hilo responde siempre al instante, aunque la interfaz esté ocupada capturando. |
+| **Tema y aspecto (R41–R43)** *(Ciclo 3)* | Tema: valor `AppsUseLightTheme` del registro del usuario. Barra de título oscura y esquinas redondeadas: `DwmSetWindowAttribute`. Íconos: la fuente **Segoe Fluent Icons**, que viene con Windows 11. Barra: un `ToolStripRenderer` propio. | Se descartó el modo oscuro de WinForms en .NET 10 porque todavía es experimental. Sin imágenes extra ni NuGet. |
 | **Logo (R33)** *(Ciclo 2)* | Un archivo `.ico` con varios tamaños (16, 20, 24, 32, 40, 48, 64 y 256 px). En el `.csproj`: `ApplicationIcon` (ícono del `.exe` en el Explorador y la barra de tareas) y `EmbeddedResource` (para cargarlo desde el código). La bandeja usa el tamaño chico del sistema (`SystemInformation.SmallIconSize`), que cambia con el escalado. | Con cada tamaño dibujado aparte, Windows no estira uno chico y el logo queda nítido al 100–150 %. Sin paquetes NuGet. |
 
 ## 6. Estructura de carpetas **[P]**
@@ -154,12 +164,14 @@ captura-tool/
 │   └── CapturaTool/            ← la aplicación (WinForms)
 │       ├── Program.cs
 │       ├── TrayApp.cs
-│       ├── Platform/           ← SingleInstance, GlobalHotkey, AutoStart, Notifier, ErrorHandler, Logger, NativeClipboard
+│       ├── Platform/           ← SingleInstance, GlobalHotkey, AutoStart, Notifier, ErrorHandler, Logger, NativeClipboard, AppIdentity, MouseButtonHook
 │       ├── Capture/            ← ScreenCapture, SelectionOverlay
 │       ├── Editor/             ← EditorForm, AnnotationDocument, ViewTransform, Annotations/
 │       ├── Output/             ← ImageRenderer, ClipboardWriter, FileSaver, FileNamer
 │       ├── Configuration/      ← AppSettings, SettingsForm
-│       └── Resources/          ← CapturaTool.ico (Ciclo 2)
+│       ├── TextRecognition/    ← TextReader, TextPreview (Ciclo 3)
+│       ├── Theming/            ← Theme, ModernToolbar (Ciclo 3)
+│       └── Resources/          ← CapturaTool.ico, CapturaTool.Insider.ico (Ciclo 2 y 3)
 ├── tests/
 │   └── CapturaTool.Tests/      ← pruebas automáticas (xUnit)
 ├── tools/
@@ -175,7 +187,7 @@ Los nombres en el código van en **inglés** (convención de C#) y los comentari
 
 | Tipo | Qué cubre | Cómo |
 |---|---|---|
-| **Automáticas** | AnnotationDocument (deshacer/rehacer), ViewTransform (conversión ida y vuelta con distintos zooms), FileNamer (formato, duplicados), AppSettings (valores por defecto, archivo dañado), ImageRenderer (la imagen final contiene las anotaciones), AppIcon (el logo está dentro del .exe y trae todos los tamaños) | xUnit, se corren con `dotnet test` |
+| **Automáticas** | AnnotationDocument (deshacer/rehacer), ViewTransform (conversión ida y vuelta con distintos zooms), FileNamer (formato, duplicados), AppSettings (valores por defecto, archivo dañado), ImageRenderer (la imagen final contiene las anotaciones), AppIcon (el logo está dentro del .exe y trae todos los tamaños), y en el Ciclo 3: AppIdentity (la estable y la Insider no comparten ningún dato), TextPreview, Theme (lectura del tema), TextReader (reconoce un texto dibujado; se salta si Windows no tiene idiomas de OCR) | xUnit, se corren con `dotnet test` |
 | **Manuales (checklist)** | Atajo, overlay, multimonitor, **dos monitores con escalados distintos**, portapapeles con Slack/GitHub, arranque con Windows, avisos, **memoria tras 20 capturas**, error provocado → aparece en el log y se avisa | Lista en `docs/checklist-manual.md` (se crea en la Fase 4) |
 | **Rendimiento** | NF1, NF2 (tiempos), NF3 (memoria) | Medición manual con cronómetro interno en modo debug y el Administrador de tareas |
 
@@ -193,6 +205,9 @@ Las integraciones con Windows son difíciles de automatizar; por eso la lógica 
 | El editor tarda más de 300 ms la primera vez | Medio | ReadyToRun + medir en el prototipo; si no alcanza, precargar el editor oculto al arrancar. |
 | WinForms no cumple NF3 (memoria) | Medio | La ventaja frente a WPF es estimada, no medida: comprobarlo en el *walking skeleton*. |
 | Aprender C# frena el avance | Medio | Código simple, comentado, tareas pequeñas (ADR 0001). |
+| *(Ciclo 3)* Windows quita el gancho del mouse y los botones dejan de funcionar sin aviso | Medio | Gancho en un hilo propio que solo avisa y vuelve; si el gancho no se pudo instalar, se anota en el log y se avisa. |
+| *(Ciclo 3)* El OCR sube la memoria en reposo o el tamaño del `.exe` | Medio | El motor de OCR se crea solo al leer texto y se libera después; medir NF3 de nuevo con la Insider. El tamaño (~25 MB) se acepta. |
+| *(Ciclo 3)* Una sola rama con varias funciones a medias | Bajo | Una tarea a la vez; no se une a `main` nada a medias (ADR 0004). |
 
 ---
 
@@ -202,3 +217,4 @@ Las integraciones con Windows son difíciles de automatizar; por eso la lógica 
 - **2026-11-10 (crítica):** se agregaron ErrorHandler + Logger (R32), ViewTransform, caché de dibujo, regla de liberación de memoria, verificación del portapapeles, reescritura de la ruta de arranque, ReadyToRun y nuevos casos del checklist. La ventaja de WinForms se marcó como *estimada, por medir*.
 - **v1.1 (2026-11-12, T17, aprobado por el usuario):** el portapapeles se escribe con las **funciones nativas de Windows** en vez de `Clipboard.SetDataObject`. Medido en T17: con `SetDataObject` y un `Bitmap`, cada copia dejaba la imagen entera sin liberar (+8 MB y +1 objeto GDI por copia de 1920 × 1080, sin límite), lo que rompía NF3. Con las funciones nativas la memoria queda estable. Se mantienen los reintentos, la verificación y los dos formatos (DIB + PNG). Nuevo componente `NativeClipboard` en `Platform/`. También en T17: la meta de NF2 pasa a 350 ms (spec v1.3).
 - **v1.2 (2026-11-12, aprobada por el usuario):** Ciclo 2 (R33, logo). Nuevo componente `AppIcon`, carpeta `Resources/` con el `.ico`, herramienta `tools/IconMaker` para regenerarlo, regla de liberación para los íconos y prueba automática de los tamaños.
+- **v1.3 (2026-11-13, rama `insiders`, aprobada por el usuario):** Ciclo 3 (R34–R43, NF8). Componentes `AppIdentity`, `TextReader`, `TextPreview`, `MouseButtonHook`, `Theme` y `ModernToolbar`; carpetas `TextRecognition/` y `Theming/`; integraciones con el OCR de Windows, el gancho del mouse y el tema; riesgos nuevos. Se mantiene WinForms (ADR 0002) y se agrega el ADR 0004.
